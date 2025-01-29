@@ -99075,8 +99075,9 @@ class BTSmart {
     // Number of outputs
     _defineProperty(this, "indSum", 10);
     // Sum of all characteristics which are permanently accessed (not LED)
-    _defineProperty(this, "name", 'BT Smart Controller');
+    _defineProperty(this, "name", 'BTSC');
     //name for BLE connection 
+    _defineProperty(this, "name2", 'BT Smart Controller');
     _defineProperty(this, "serviceOutuuid", '8ae883b4-ad7d-11e6-80f5-76304dec7eb7');
     _defineProperty(this, "serviceOutuuidMobile", '8AE883B4-AD7D-11E6-80F5-76304DEC7EB7');
     _defineProperty(this, "serviceInuuid", '8ae8952a-ad7d-11e6-80f5-76304dec7eb7');
@@ -99107,6 +99108,7 @@ class BTReceiver {
     _defineProperty(this, "indIn", 0);
     _defineProperty(this, "name", 'BT Control Receiver');
     //name for BLE connection
+    _defineProperty(this, "name2", 'BT Control Receiver');
     _defineProperty(this, "serviceOutuuid", '2e58327e-c5c5-11e6-9d9d-cec0c932ce01');
     _defineProperty(this, "serviceOutuuidMobile", '2E58327E-C5C5-11E6-9D9D-CEC0C932CE01');
     _defineProperty(this, "serviceLEDuuid", '2e582b3a-c5c5-11e6-9d9d-cec0c932ce01');
@@ -99134,6 +99136,7 @@ class Robby {
     // Sum of all characteristics which are permanently accessed (not LED)
     _defineProperty(this, "name", 'Robby');
     //name for BLE connection
+    _defineProperty(this, "name2", 'Robby');
     _defineProperty(this, "serviceOutuuid", '7b130100-ce8d-45bb-9158-631b769139e9');
     _defineProperty(this, "serviceOutuuidMobile", '7B130100-CE8D-45BB-9158-631B769139E9');
     _defineProperty(this, "serviceInuuidMobile", '7B130100-CE8D-45BB-9158-631B769139E9');
@@ -99164,6 +99167,7 @@ class TXT40 {
     // Sum of all characteristics which are permanently accessed (not LED)
     _defineProperty(this, "name", 'fischertechnik TXT 4.0 Controller');
     //name for BLE connection 
+    _defineProperty(this, "name2", 'fischertechnik TXT 4.0 Controller');
     _defineProperty(this, "serviceOutuuid", '8ae883b4-ad7d-11e6-80f5-76304dec7eb7');
     _defineProperty(this, "serviceInuuid", '8ae8952a-ad7d-11e6-80f5-76304dec7eb7');
     _defineProperty(this, "serviceIModeuuid", '8ae88d6e-ad7d-11e6-80f5-76304dec7eb7');
@@ -99497,7 +99501,9 @@ class BLEDevice {
     return connect = new Promise((resolve, reject) => {
       navigator.bluetooth.requestDevice({
         filters: [{
-          name: type.name
+          namePrefix: type.name
+        }, {
+          namePrefix: type.name2
         }],
         optionalServices: type.services
       }).then(device => {
@@ -99649,63 +99655,29 @@ class txt40 {
   readfunc() {
     fetch(url + ':8000', {
       method: 'GET'
-    }).then(x => {
-      return x.text();
-    }).then(x => {
-      if (JSON.parse(x).i1 / 20000 * 255 > 255) {
-        valIn[0 + this.indOut] = 255;
-      } else {
-        valIn[0 + this.indOut] = JSON.parse(x).i1 / 20000 * 255;
+    }).then(response => response.text()).then(responseText => {
+      //console.log(responseText);
+
+      const data = JSON.parse(responseText);
+      for (let i = 0; i < 8; i++) {
+        const inputValue = parseInt(data["i".concat(i + 1)], 10);
+        const scaledValue = Math.min(inputValue / 20000 * 255, 255);
+        valIn[i + this.indOut] = scaledValue;
       }
-      if (JSON.parse(x).i1 / 20000 * 255 > 255) {
-        valIn[1 + this.indOut] = 255;
-      } else {
-        valIn[1 + this.indOut] = JSON.parse(x).i1 / 20000 * 255;
-      }
-      if (JSON.parse(x).i1 / 20000 * 255 > 255) {
-        valIn[2 + this.indOut] = 255;
-      } else {
-        valIn[2 + this.indOut] = JSON.parse(x).i1 / 20000 * 255;
-      }
-      if (JSON.parse(x).i1 / 20000 * 255 > 255) {
-        valIn[3 + this.indOut] = 255;
-      } else {
-        valIn[3 + this.indOut] = JSON.parse(x).i1 / 20000 * 255;
-      }
-      if (JSON.parse(x).i1 / 20000 * 255 > 255) {
-        valIn[4 + this.indOut] = 255;
-      } else {
-        valIn[4 + this.indOut] = JSON.parse(x).i1 / 20000 * 255;
-      }
-      if (JSON.parse(x).i1 / 20000 * 255 > 255) {
-        valIn[5 + this.indOut] = 255;
-      } else {
-        valIn[5 + this.indOut] = JSON.parse(x).i1 / 20000 * 255;
-      }
-      if (JSON.parse(x).i1 / 20000 * 255 > 255) {
-        valIn[6 + this.indOut] = 255;
-      } else {
-        valIn[6 + this.indOut] = JSON.parse(x).i1 / 20000 * 255;
-      }
-      if (JSON.parse(x).i1 / 20000 * 255 > 255) {
-        valIn[7 + this.indOut] = 255;
-      } else {
-        valIn[7 + this.indOut] = JSON.parse(x).i1 / 20000 * 255;
-      }
-      valIn[8 + this.indOut + this.indServo] = JSON.parse(x).c1;
-      valIn[9 + this.indOut + this.indServo] = JSON.parse(x).c2;
-      valIn[10 + this.indOut + this.indServo] = JSON.parse(x).c3;
-      valIn[11 + this.indOut + this.indServo] = JSON.parse(x).c4;
+      valIn[8 + this.indOut + this.indServo] = parseInt(data.c1, 10);
+      valIn[9 + this.indOut + this.indServo] = parseInt(data.c2, 10);
+      valIn[10 + this.indOut + this.indServo] = parseInt(data.c3, 10);
+      valIn[11 + this.indOut + this.indServo] = parseInt(data.c4, 10);
       success = true;
       charZust = 0;
     }).catch(error => {
       charZust = 0;
-      console.log(error);
+      console.error(error);
       main.disconnect();
     });
   }
   getwriteOut(ind, val) {
-    value = val / 127 * 512;
+    var value = val / 127 * 512;
     if (ind < this.indOut / 3) {
       var string = {
         port: "m" + (ind + 1).toString(),
@@ -100151,6 +100123,11 @@ class HttpDevice {
         this.connecthand();
         resolve("TXT40");
       }).catch(error => {
+        if (error.message && error.message.includes('Mixed Content')) {
+          console.log('Error: Mixed Content detected.');
+        } else {
+          console.log('An error occurred:', error);
+        }
         reject(error);
       });
     });
@@ -101561,11 +101538,16 @@ class LT {
   // Number of outputs
 
   async readInput(result) {
+    const bufferLength = result.data.buffer.byteLength;
+    if (bufferLength < 6) {
+      //throw new RangeError(`DataView buffer is too small: ${bufferLength} bytes.`);
+    }
     const dataView = new DataView(result.data.buffer);
-    const digitalInputs = dataView.getUint8(0) & 0x07;
-    const analog1 = dataView.getUint16(1, true);
-    const analog2 = dataView.getUint16(3, true);
-    const analog3 = dataView.getUint16(4, true) >> 2;
+    const digitalInputs = dataView.getUint8(0) & 0x07; // Byte 0
+    const analog1 = dataView.getUint16(1, true); // Bytes 1-2
+    const analog2 = dataView.getUint16(3, true); // Bytes 3-4
+    const analog3 = dataView.getUint16(4, true) >> 2; // Bytes 4-5
+
     var d1 = digitalInputs & 0x01;
     var d2 = digitalInputs & 0x02;
     var d3 = digitalInputs & 0x04;
@@ -101641,7 +101623,7 @@ class LT {
     var Left = 1;
     var Right = 2;
     var Brake = 3;
-    pwm = val;
+    var pwm2 = Math.round(val / 255 * 100);
     if (ind < this.indOut / 3) {
       var id = ind + 1;
       //motor (id, dir = this.Off, speed = 0)
@@ -101675,11 +101657,13 @@ class LT {
       if (typeof state !== 'boolean') {
         console.log('Illegal output state');
       }
-      if (pwm < 0 || pwm > 100) {
+      if (pwm2 < 0 || pwm2 > 100) {
         console.log('Output pwm out of range');
       }
       enable[id - 1] = state;
-      pwm[id - 1] = pwm;
+      pwm[id - 1] = pwm2;
+      console.log(enable);
+      console.log(pwm);
     }
 
     // assemble command sequence from pwm/enable state //// beides
@@ -101737,68 +101721,68 @@ class ftduino {
     translate.setup(); // setup translation
   }
   async readInput(indee) {
-    // send a request to read an input or counter, surprisingly the read data does not always belong to the latest resopnse but it returns its port number 
-    return new Promise((resolve, reject) => {
-      let data = undefined;
-      var res;
-      var start = undefined;
-      var end = undefined;
-      var parms = undefined;
-      if (indee > 7) {
-        parms = {
-          "port": 'c' + (indee - 7).toString(),
+    return new Promise(async (resolve, reject) => {
+      try {
+        let parms = indee > 7 ? {
+          port: 'c' + (indee - 7).toString(),
           type: "counter"
+        } : {
+          port: 'i' + (indee + 1).toString()
         };
-      } else {
-        parms = {
-          "port": 'i' + (indee + 1).toString()
-        };
-      }
-      data = this.textEncoder.encode(JSON.stringify({
-        get: parms
-      }));
-      connecteddevice.transferOut(outEndpoint, data).then(result => {
-        return connecteddevice.transferIn(5, 64);
-      }).then(result => {
-        res = textDecoder.decode(result.data);
-        for (var r = 0; r < res.length; r = r + 1) {
-          if (res.charAt(r) == '{') {
-            start = r;
-            break;
-          }
+        const data = this.textEncoder.encode(JSON.stringify({
+          get: parms
+        }));
+        await connecteddevice.transferOut(outEndpoint, data);
+        const result = await connecteddevice.transferIn(5, 64);
+        let res = textDecoder.decode(result.data);
+
+        //console.log(res)
+
+        const jsonStart = res.indexOf('{');
+        const jsonEnd = res.lastIndexOf('}');
+        if (jsonStart === -1 || jsonEnd === -1) {
+          console.warn("Keine gültige JSON-Antwort erhalten. Überspringe...");
+          return resolve();
         }
-        for (var r = 0; r < res.length; r = r + 1) {
-          if (res.charAt(r) == '}') {
-            end = r;
-            break;
-          }
+        const jsonString = res.substring(jsonStart, jsonEnd + 1);
+
+        //const parsed = JSON.parse(jsonString);
+        let parsed;
+        try {
+          parsed = JSON.parse(jsonString);
+        } catch (parseError) {
+          console.warn("Fehler beim Parsen der JSON-Daten. Überspringe...");
+          return resolve();
         }
-        if (start != undefined && end != undefined && res != undefined) {
-          res = res.substring(start, end + 1);
-          if (JSON.parse(res).port != undefined && JSON.parse(res).value != undefined) {
-            if (JSON.parse(res).port.substring(0, 1) == 'C') {
-              valIn[Number(JSON.parse(res).port.substring(1)) + 7 + this.indOut] = Number(JSON.parse(res).value);
-            } else {
-              if (valWrite[Number(JSON.parse(res).port.substring(1)) - 1 + this.indOut] == 0x0b) {
-                valIn[Number(JSON.parse(res).port.substring(1)) - 1 + this.indOut] = JSON.parse(res).value / 65535 * 255;
-              } else {
-                valIn[Number(JSON.parse(res).port.substring(1)) - 1 + this.indOut] = JSON.parse(res).value;
-              }
-            }
-            resolve();
-          } else {
-            reject('nodo');
-          }
+        if (parsed.error !== undefined) {
+          console.warn("Fehler in der Antwort: " + parsed.error);
+          return resolve();
+        }
+        if (!parsed.port || parsed.value === undefined) {
+          console.warn("Ungültige Antwort: Fehlender Port oder Wert. Überspringe...");
+          return resolve();
+        }
+        const portPrefix = parsed.port.charAt(0).toUpperCase();
+        const portIndex = Number(parsed.port.substring(1));
+        if (portPrefix === 'C') {
+          valIn[portIndex + 7 + this.indOut] = Number(parsed.value);
         } else {
-          reject('noo');
+          const adjustedIndex = portIndex - 1 + this.indOut;
+          let calculatedValue;
+          if (valWrite[adjustedIndex] === 0x0b || valWrite[adjustedIndex] === 0x0a) {
+            calculatedValue = parsed.value;
+          } else {
+            calculatedValue = parsed.value / 65535 * 255;
+          }
+
+          //valIn[adjustedIndex] = Math.min(calculatedValue, 255);
+          valIn[adjustedIndex] = calculatedValue;
         }
-      }).catch(error => {
-        console.log(error);
-        console.log(res);
-        setTimeout(x => {
-          reject(error);
-        }, 5);
-      });
+        resolve();
+      } catch (error) {
+        console.error("Error during readInput:", error);
+        reject(error);
+      }
     });
   }
   readfunc() {
