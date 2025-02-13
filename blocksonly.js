@@ -78358,30 +78358,38 @@ __webpack_require__.r(__webpack_exports__);
     id: "gui.extension.robby.connectingMessage"
   }),
   helpLink: 'https://technika-karlsruhe.github.io/'
-}, {
-  name: 'TX',
-  extensionId: 'tx',
-  collaborator: 'technika',
-  iconURL: _ft_tx_big_png__WEBPACK_IMPORTED_MODULE_10__,
-  insetIconURL: _ft_tx_small_png__WEBPACK_IMPORTED_MODULE_11__,
-  description: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__.FormattedMessage, {
-    defaultMessage: "Connect your projects with TX.",
-    id: "gui.extension.tx.description"
-  }),
-  featured: true,
-  disabled: false,
-  bluetoothRequired: false,
-  internetConnectionRequired: false,
-  launchPeripheralConnectionFlow: false,
-  useAutoScan: false,
-  connectionIconURL: _ft_tx_small_png__WEBPACK_IMPORTED_MODULE_11__,
-  connectionSmallIconURL: _ft_tx_small_png__WEBPACK_IMPORTED_MODULE_11__,
-  connectingMessage: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__.FormattedMessage, {
-    defaultMessage: "Connecting",
-    id: "gui.extension.tx.connectingMessage"
-  }),
-  helpLink: 'https://technika-karlsruhe.github.io/'
-}, {
+},
+//{
+//    name: 'TX',
+//    extensionId: 'tx',
+//    collaborator: 'technika',
+//    iconURL: txIconURL,
+//    insetIconURL: txInsetIconURL,
+//    description: (
+//        <FormattedMessage
+//            defaultMessage="Connect your projects with TX."
+//            description="Description for the 'fischertechnik' extension"
+//            id="gui.extension.tx.description"
+//        />
+//    ),
+//    featured: true,
+//    disabled: false,
+//    bluetoothRequired: false,
+//    internetConnectionRequired: false,
+//    launchPeripheralConnectionFlow: false,
+//    useAutoScan: false,
+//    connectionIconURL: txConnectionIconURL,
+//    connectionSmallIconURL: txConnectionSmallIconURL,
+//    connectingMessage: (
+//        <FormattedMessage
+//            defaultMessage="Connecting"
+//            description="Message to help people connect to their fischertechnik."
+//            id="gui.extension.tx.connectingMessage"
+//        />
+//    ),
+//    helpLink: 'https://technika-karlsruhe.github.io/'
+//},
+{
   name: 'TXT4.0',
   extensionId: 'txt40',
   collaborator: 'technika',
@@ -78404,30 +78412,38 @@ __webpack_require__.r(__webpack_exports__);
     id: "gui.extension.txt40.connectingMessage"
   }),
   helpLink: 'https://technika-karlsruhe.github.io/'
-}, {
-  name: 'LT',
-  extensionId: 'lt',
-  collaborator: 'technika',
-  iconURL: _ft_lt_big_png__WEBPACK_IMPORTED_MODULE_14__,
-  insetIconURL: _ft_lt_small_png__WEBPACK_IMPORTED_MODULE_15__,
-  description: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__.FormattedMessage, {
-    defaultMessage: "Connect your projects with LT.",
-    id: "gui.extension.lt.description"
-  }),
-  featured: true,
-  disabled: false,
-  bluetoothRequired: false,
-  internetConnectionRequired: false,
-  launchPeripheralConnectionFlow: false,
-  useAutoScan: false,
-  connectionIconURL: _ft_lt_small_png__WEBPACK_IMPORTED_MODULE_15__,
-  connectionSmallIconURL: _ft_lt_small_png__WEBPACK_IMPORTED_MODULE_15__,
-  connectingMessage: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__.FormattedMessage, {
-    defaultMessage: "Connecting",
-    id: "gui.extension.lt.connectingMessage"
-  }),
-  helpLink: 'https://technika-karlsruhe.github.io/'
-}, {
+},
+//{
+//    name: 'LT',
+//    extensionId: 'lt',
+//    collaborator: 'technika',
+//    iconURL: ltIconURL,
+//    insetIconURL: ltInsetIconURL,
+//    description: (
+//        <FormattedMessage
+//            defaultMessage="Connect your projects with LT."
+//            description="Description for the 'fischertechnik' extension"
+//            id="gui.extension.lt.description"
+//        />
+//    ),
+//    featured: true,
+//    disabled: false,
+//    bluetoothRequired: false,
+//    internetConnectionRequired: false,
+//    launchPeripheralConnectionFlow: false,
+//    useAutoScan: false,
+//    connectionIconURL: ltConnectionIconURL,
+//    connectionSmallIconURL: ltConnectionSmallIconURL,
+//    connectingMessage: (
+//        <FormattedMessage
+//            defaultMessage="Connecting"
+//            description="Message to help people connect to their fischertechnik."
+//            id="gui.extension.lt.connectingMessage"
+//        />
+//    ),
+//    helpLink: 'https://technika-karlsruhe.github.io/'
+//},
+{
   name: 'ftduino',
   extensionId: 'ftduino',
   collaborator: 'technika',
