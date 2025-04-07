@@ -11,7 +11,8 @@ Online (verbindung mit Laptop dieser benutzt Controller):
 - Robby (First Coding / Early Coding)
 - TXT4.0
 - ftduino
-- weiter folgen u.a. (LT, RX, TX, TXT)
+- LT
+- weiter folgen u.a. (RX, TX, TXT)
 
 Offline (Programm kann auf Controller geladen werden):
 - nicht möglich (Bt-Smart, Bt-Receiver, Robby, LT)
