@@ -78320,7 +78320,7 @@ __webpack_require__.r(__webpack_exports__);
   helpLink: 'https://technika-karlsruhe.github.io/'
 }, {
   name: 'TXT',
-  extensionId: 'ftxt',
+  extensionId: 'txt',
   collaborator: 'technika',
   iconURL: _ft_txt_big_png__WEBPACK_IMPORTED_MODULE_6__,
   insetIconURL: _ft_txt_small_png__WEBPACK_IMPORTED_MODULE_7__,
@@ -97696,7 +97696,7 @@ const builtinExtensions = {
   makeymakey: () => __webpack_require__(/*! ../extensions/scratch3_makeymakey */ "../scratch-vm/src/extensions/scratch3_makeymakey/index.js"),
   btsmart: () => __webpack_require__(/*! ../extensions/scratch3_btsmart */ "../scratch-vm/src/extensions/scratch3_btsmart/index.js"),
   btreceiver: () => __webpack_require__(/*! ../extensions/scratch3_btreceiver */ "../scratch-vm/src/extensions/scratch3_btreceiver/index.js"),
-  //txt: () => require('../extensions/scratch3_txt'),
+  txt: () => __webpack_require__(/*! ../extensions/scratch3_txt */ "../scratch-vm/src/extensions/scratch3_txt/index.js"),
   ftxt: () => __webpack_require__(/*! ../extensions/scratch3_ftrobotxt */ "../scratch-vm/src/extensions/scratch3_ftrobotxt/index.js"),
   robby: () => __webpack_require__(/*! ../extensions/scratch3_robby */ "../scratch-vm/src/extensions/scratch3_robby/index.js"),
   tx: () => __webpack_require__(/*! ../extensions/scratch3_tx */ "../scratch-vm/src/extensions/scratch3_tx/index.js"),
@@ -98323,7 +98323,7 @@ class Block {
       }
     };
   }
-  getBlock_dosetLamp2() {
+  getBlock_doSetLamp2() {
     return {
       opcode: 'doSetLamp2',
       text: translate._getText('doSetLamp', this.locale),
@@ -98394,6 +98394,25 @@ class Block {
         MODE: {
           type: ArgumentType.STRING,
           menu: 'inputModes',
+          defaultValue: 'd10v'
+        }
+      }
+    };
+  }
+  getBlock_doConfigureInput2() {
+    return {
+      opcode: 'doConfigureInput2',
+      text: translate._getText('doConfigureInput', this.locale),
+      blockType: BlockType.COMMAND,
+      arguments: {
+        INPUT: {
+          type: ArgumentType.STRING,
+          menu: 'inputID',
+          defaultValue: this.indefaultValue
+        },
+        MODE: {
+          type: ArgumentType.STRING,
+          menu: 'inputModes2',
           defaultValue: 'd10v'
         }
       }
@@ -98723,13 +98742,13 @@ class Block {
   //Block functions
   onOpenClose(args, controller) {
     if (controller != undefined && controller.connected == true) {
-      if (controller.getvalWrite(parseInt(args.INPUT)) != 0x0b && (args.SENSOR == 'sens_button' || args.SENSOR == 'sens_lightBarrier' || args.SENSOR == 'sens_reed')) {
+      if (controller.getvalWrite(parseInt(args.INPUT)) != 0x0b && (args.SENSOR == 'sens_button' || args.SENSOR == 'sens_lightBarrier' || args.SENSOR == 'sens_reed' || args.SENSOR == 'sens_trail')) {
         // check if the mode has to be changed 
         controller.setchanging(parseInt(args.INPUT), true); //has to be changed 
       }
-      if (controller.getvalWrite(parseInt(args.INPUT)) != 0x0a && args.SENSOR == 'sens_trail') {
-        controller.setchanging(parseInt(args.INPUT), true); // has to be changed 
-      }
+      //if (controller.getvalWrite(parseInt(args.INPUT))!=0x0a && args.SENSOR=='sens_trail'){
+      //    controller.setchanging(parseInt(args.INPUT), true); // has to be changed 
+      //} 
       if (controller.getchanging(parseInt(args.INPUT)) == true) {
         // if something must be changed 
         controller.changeInMode(args); // change function automatically ensures no exceptions occur
@@ -98798,7 +98817,6 @@ class Block {
   getSensor(args, controller) {
     // SENSOR, INPUT
     //-->set input to right mode and read afterwards
-    //needs change I mode 
     if (controller != undefined && controller.connected == true) {
       // make sure a controller is actually connected
       switch (args.SENSOR) {
@@ -98821,14 +98839,15 @@ class Block {
     // SENSOR, INPUT
     if (controller != undefined && controller.connected == true) {
       // make sure a controller is actually connected
-      if (controller.getvalWrite(parseInt(args.INPUT)) != 0x0b && (args.SENSOR == 'sens_button' || args.SENSOR == 'sens_lightBarrier' || args.SENSOR == 'sens_reed')) {
+      if (controller.getvalWrite(parseInt(args.INPUT)) != 0x0b && (args.SENSOR == 'sens_button' || args.SENSOR == 'sens_lightBarrier' || args.SENSOR == 'sens_reed' || args.SENSOR == 'sens_trail')) {
         // check if the mode has to be changed 
         controller.setchanging(parseInt(args.INPUT), true); //has to be changed 
       }
-      if (controller.getvalWrite(parseInt(args.INPUT)) != 0x0a && args.SENSOR == 'sens_trail') {
-        controller.setchanging(parseInt(args.INPUT), true); // has to be changed 
-      }
+      //if (controller.getvalWrite(parseInt(args.INPUT))!=0x0a && args.SENSOR=='sens_trail'){
+      //    controller.setchanging(parseInt(args.INPUT), true); // has to be changed 
+      //} 
       if (controller.getchanging(parseInt(args.INPUT)) == true) {
+        // if something must be changed
         controller.changeInMode(args);
         if (controller.getnumruns(parseInt(args.INPUT)) < 100) {
           controller.setnumruns(parseInt(args.INPUT), controller.getnumruns(parseInt(args.INPUT)) + 1);
@@ -100208,6 +100227,7 @@ module.exports = HttpDevice;
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 const swal = __webpack_require__(/*! sweetalert */ "../scratch-vm/node_modules/sweetalert/dist/sweetalert.min.js");
+const JSZip = __webpack_require__(/*! jszip */ "../scratch-vm/node_modules/jszip/dist/jszip.min.js");
 const PARENT_CLASS = "controls_controls-container_FKkXX";
 const FT_BUTTON_ID = "ft_connect_button";
 ftConnectedIcon = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczpjYz0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbnMjIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+CjxtZXRhZGF0YT4KPHJkZjpSREY+CjxjYzpXb3JrIHJkZjphYm91dD0iIj4KPGRjOmZvcm1hdD5pbWFnZS9zdmcreG1sPC9kYzpmb3JtYXQ+CjxkYzp0eXBlIHJkZjpyZXNvdXJjZT0iaHR0cDovL3B1cmwub3JnL2RjL2RjbWl0eXBlL1N0aWxsSW1hZ2UiLz4KPGRjOnRpdGxlLz4KPC9jYzpXb3JrPgo8L3JkZjpSREY+CjwvbWV0YWRhdGE+CjxzdHlsZT4uc3Qye2ZpbGw6cmVkfS5zdDN7ZmlsbDojZTBlMGUwfS5zdDR7ZmlsbDpub25lO3N0cm9rZTojNjY2O3N0cm9rZS13aWR0aDouNTtzdHJva2UtbWl0ZXJsaW1pdDoxMH08L3N0eWxlPgo8cGF0aCBkPSJtMjguODQyIDEuMDU2Ny01LjIzMDIgNS4yMzAyLTIuODQ4Ni0yLjg0ODZjLTEuMTk1NS0xLjE5NTUtMi45NjA3LTEuMTk1NS00LjE1NjEgMGwtMy43MzU4IDMuNzM1OC0xLjQ5NDMtMS40OTQzLTIuMTAxNCAyLjEwMTQgMTQuOTQzIDE0Ljk0MyAyLjEwMTQtMi4xMDE0LTEuNDk0My0xLjQ5NDMgMy43MzU4LTMuNzM1OGMxLjE5NTUtMS4xOTU1IDEuMTk1NS0yLjk2MDYgMC00LjE1NjFsLTIuODQ4Ni0yLjg0ODYgNS4yMzAyLTUuMjMwMnptLTIxLjIwMSA4LjM1ODktMi4xMDE0IDIuMTAxNCAxLjQ5NDMgMS40OTQzLTMuNTk1NyAzLjU5NTdjLTEuMTk1NSAxLjE5NTUtMS4xOTU1IDIuOTYwNyAwIDQuMTU2MWwyLjg0ODYgMi44NDg2LTUuMjMwMiA1LjIzMDIgMi4xMDE0IDIuMTAxNCA1LjIzMDItNS4yMzAyIDIuODQ4NiAyLjg0ODZjMS4xOTU1IDEuMTk1NSAyLjk2MDcgMS4xOTU1IDQuMTU2MSAwbDMuNTk1Ny0zLjU5NTcgMS40OTQzIDEuNDk0MyAyLjEwMTQtMi4xMDE0eiIgZmlsbD0iIzFhZmYxNCIgb3ZlcmZsb3c9InZpc2libGUiIHN0cm9rZT0iIzAyOTEwMCIgc3Ryb2tlLXdpZHRoPSIxLjQ5NDMiIHN0eWxlPSJ0ZXh0LWluZGVudDowO3RleHQtdHJhbnNmb3JtOm5vbmUiLz4KPC9zdmc+Cg==';
@@ -100398,6 +100418,8 @@ async function stud() {
           controller = undefined;
           buttonpressed = false;
         }
+      } else if (type == 'TXT') {
+        value = "notsupported";
       }
       switch (value) {
         //controller is initialized
@@ -100415,6 +100437,10 @@ async function stud() {
         case "http":
           connection = 'Http';
           controller = new HttpDevice();
+          break;
+        case "notsupported":
+          swal(translate._getText('notsupported', this.locale));
+          img.setAttribute("src", ftDisconnectedIcon);
           break;
       }
       if (controller != undefined) {
@@ -100516,7 +100542,7 @@ class Main {
         }
       });
     }
-    this.versionNumber = "0.1.8";
+    this.versionNumber = "0.1.9";
   }
   ismobile() {
     const isTabletDevice = isTablet();
@@ -100687,21 +100713,16 @@ class Main {
     setInterval(checkConnectionAndDisableMenu, 400);
   }
   addDownloadButton() {
-    var validDownloadTypes = ["ftduino", "TXT", "TX", "RX", "TXT40"];
-    if (document.getElementById("ft_download_button")) {
-      return;
-    }
-    if (!validDownloadTypes.includes(type)) {
-      return;
-    }
-    if (extensionnumber > 1) {
-      return;
-    }
+    const validDownloadTypes = ["ftduino", "TXT", "TX", "RX", "TXT40"];
+    if (document.getElementById("ft_download_button")) return;
+    if (!validDownloadTypes.includes(type)) return;
+    if (extensionnumber > 1) return;
     const parentElement = document.querySelector(".".concat(PARENT_CLASS));
     if (!parentElement) {
       console.error("Element with class '".concat(PARENT_CLASS, "' not found"));
       return;
     }
+    this.uploadedSb3File = this.uploadedSb3File || null;
     const downloadButton = document.createElement("IMG");
     downloadButton.setAttribute("id", "ft_download_button");
     downloadButton.setAttribute("draggable", false);
@@ -100710,7 +100731,7 @@ class Main {
     downloadButton.setAttribute("width", "32px");
     downloadButton.setAttribute("title", translate._getText('downloadbutton', this.locale));
     downloadButton.style.cursor = "pointer";
-    downloadButton.style.borderRadius = "0.25rem"; //rounding of the background when hovering over it
+    downloadButton.style.borderRadius = "0.25rem";
     downloadButton.style.padding = "0.30rem";
     downloadButton.addEventListener("mouseover", () => {
       downloadButton.style.backgroundColor = 'hsla(215, 100%, 65%, 0.15)';
@@ -100719,22 +100740,362 @@ class Main {
       downloadButton.style.backgroundColor = 'transparent';
     });
     downloadButton.addEventListener("click", () => {
-      console.log("Download button clicked");
       if (type === "ftduino") {
-        console.log("ftduino download initiated");
-      } else if (type === "TXT") {
-        console.log("TXT download initiated");
-      } else if (type === "TX") {
-        console.log("TX download initiated");
-      } else if (type === "RX") {
-        console.log("RX download initiated");
-      } else if (type === "TXT40") {
-        console.log("TXT40 download initiated");
+        swal({
+          text: translate._getText('ftduinoflash', this.locale),
+          buttons: {
+            cancel: translate._getText('cancel', this.locale),
+            upload: {
+              text: translate._getText('ftduinoupload', this.locale),
+              value: 'upload'
+            },
+            flash: {
+              text: 'Flash',
+              value: 'flash'
+            }
+          }
+        }).then(value => {
+          switch (value) {
+            case 'upload':
+              this.triggerFileUpload();
+              break;
+            case 'flash':
+              this.handleFtduinoFlash();
+              break;
+            default:
+              // Handle cancellation
+              break;
+          }
+        });
       } else {
-        console.log("Unknown type, no download action defined");
+        //if (!this.uploadedSb3File) {
+        this.triggerFileUpload();
+        //} else {
+        //	this.handleDownload(this.uploadedSb3File);
+        //}
       }
     });
     parentElement.appendChild(downloadButton);
+  }
+  triggerFileUpload() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".sb3";
+    input.addEventListener("change", event => {
+      const file = event.target.files[0];
+      if (file) {
+        this.uploadedSb3File = file;
+        const reader = new FileReader();
+        reader.onload = e => {
+          const fileContent = e.target.result;
+          console.log("SB3 file loaded:", file.name);
+          this.handleDownload(fileContent);
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    });
+    input.click();
+  }
+  handleFtduinoFlash() {
+    console.log("FLASH mode for ftduino started");
+    // Flash Code
+  }
+  async handleDownload(fileData) {
+    switch (type) {
+      case "ftduino":
+        console.log("ftduino download with SB3:", fileData);
+        break;
+      case "TXT":
+        console.log("TXT download with SB3:", fileData);
+        try {
+          const zip = await JSZip.loadAsync(fileData);
+          // project.json extract
+          const projectJson = await zip.file("project.json").async("string");
+          const projectData = JSON.parse(projectJson);
+          // blocks modify
+          this.replaceBlocks(projectData);
+          // Pack changed JSON back into ZIP
+          zip.file("project.json", JSON.stringify(projectData, null, 2));
+          // Recreate ZIP (sb3)
+          const newSb3Blob = await zip.generateAsync({
+            type: "blob"
+          });
+          // download automatically
+          this.downloadFile(newSb3Blob, "converted_project.sb3");
+          swal(translate._getText('downloadtxt', this.locale));
+        } catch (err) {
+          console.error("Error processing SB3 file:", err);
+        }
+        break;
+      case "TX":
+        console.log("TX download with SB3:", fileData);
+        break;
+      case "RX":
+        console.log("RX download with SB3:", fileData);
+        break;
+      case "TXT40":
+        console.log("TXT40 download with SB3:", fileData);
+        break;
+      default:
+        console.log("Unknown type, no download defined.");
+    }
+  }
+  replaceBlocks(projectData) {
+    console.log("Blocks are being replaced...");
+    const blockReplacements = [{
+      fromOpcode: "txt_onOpenClose",
+      toOpcode: "ftxt_onOpenClose",
+      fieldChanges: {
+        SENSOR: val => {
+          var _sens_button$sens_lig;
+          return (_sens_button$sens_lig = {
+            sens_button: "0",
+            sens_lightBarrier: "1",
+            sens_reed: "2",
+            sens_trail: "3"
+          }[val]) !== null && _sens_button$sens_lig !== void 0 ? _sens_button$sens_lig : val;
+        },
+        INPUT: val => (Number(val) - 12).toString(),
+        OPENCLOSE: val => val === "open" ? "0" : "1"
+      }
+    }, {
+      fromOpcode: "txt_onCounter",
+      toOpcode: "ftxt_onCounter",
+      fieldChanges: {
+        COUNTER_ID: val => (Number(val) - 20).toString(),
+        OPERATOR: val => val
+      },
+      inputChanges: {
+        VALUE: val => val
+      }
+    }, {
+      fromOpcode: "txt_onInput2",
+      toOpcode: "ftxt_onInput",
+      fieldChanges: {
+        SENSOR: val => {
+          var _sens_color$sens_ntc$;
+          return (_sens_color$sens_ntc$ = {
+            sens_color: "0",
+            sens_ntc: "2",
+            sens_photo: "3",
+            sens_distance: "1"
+          }[val]) !== null && _sens_color$sens_ntc$ !== void 0 ? _sens_color$sens_ntc$ : val;
+        },
+        INPUT: val => (Number(val) - 12).toString(),
+        OPERATOR: val => val
+      },
+      inputChanges: {
+        VALUE: val => val
+      }
+    }, {
+      fromOpcode: "txt_getCounter",
+      toOpcode: "ftxt_getCounter",
+      fieldChanges: {
+        COUNTER_ID: val => (Number(val) - 20).toString()
+      }
+    }, {
+      fromOpcode: "txt_getSensor2",
+      toOpcode: "ftxt_getSensor",
+      fieldChanges: {
+        SENSOR: val => {
+          var _sens_color$sens_ntc$2;
+          return (_sens_color$sens_ntc$2 = {
+            sens_color: "0",
+            sens_ntc: "2",
+            sens_photo: "3",
+            sens_distance: "1"
+          }[val]) !== null && _sens_color$sens_ntc$2 !== void 0 ? _sens_color$sens_ntc$2 : val;
+        },
+        INPUT: val => (Number(val) - 12).toString()
+      }
+    }, {
+      fromOpcode: "txt_isClosed",
+      toOpcode: "ftxt_isClosed",
+      fieldChanges: {
+        SENSOR: val => {
+          var _sens_button$sens_lig2;
+          return (_sens_button$sens_lig2 = {
+            sens_button: "0",
+            sens_lightBarrier: "1",
+            sens_reed: "2",
+            sens_trail: "3"
+          }[val]) !== null && _sens_button$sens_lig2 !== void 0 ? _sens_button$sens_lig2 : val;
+        },
+        INPUT: val => (Number(val) - 12).toString()
+      }
+    }, {
+      fromOpcode: "txt_doPlaySound",
+      toOpcode: "ftxt_doPlaySound",
+      inputChanges: {
+        NUM: val => val
+      }
+    }, {
+      fromOpcode: "txt_doPlaySoundWait",
+      toOpcode: "ftxt_doPlaySoundWait",
+      inputChanges: {
+        NUM: val => val
+      }
+    }, {
+      fromOpcode: "txt_doSetLamp2",
+      toOpcode: "ftxt_doSetLamp",
+      fieldChanges: {
+        OUTPUT: val => (Number(val) - 4).toString()
+      },
+      inputChanges: {
+        NUM: val => val
+      }
+    }, {
+      fromOpcode: "txt_doSetOutput2",
+      toOpcode: "ftxt_doSetOutput",
+      fieldChanges: {
+        OUTPUT: val => (Number(val) - 4).toString()
+      },
+      inputChanges: {
+        NUM: val => val
+      }
+    }, {
+      fromOpcode: "txt_doResetCounter",
+      toOpcode: "ftxt_doResetCounter",
+      fieldChanges: {
+        COUNTER_ID: val => (Number(val) - 20).toString()
+      }
+    }, {
+      fromOpcode: "txt_doConfigureInput2",
+      toOpcode: "ftxt_doConfigureInput",
+      fieldChanges: {
+        INPUT: val => (Number(val) - 12).toString(),
+        MODE: val => {
+          var _d10v$d5k$a10v$a5k$ul;
+          return (_d10v$d5k$a10v$a5k$ul = {
+            d10v: "0",
+            d5k: "1",
+            a10v: "2",
+            a5k: "3",
+            ultrasonic: "4"
+          }[val]) !== null && _d10v$d5k$a10v$a5k$ul !== void 0 ? _d10v$d5k$a10v$a5k$ul : val;
+        }
+      }
+    }, {
+      fromOpcode: "txt_doSetMotorSpeed",
+      toOpcode: "ftxt_doSetMotorSpeed",
+      fieldChanges: {
+        MOTOR_ID: val => val
+      },
+      inputChanges: {
+        SPEED: val => val
+      }
+    }, {
+      fromOpcode: "txt_doSetMotorSpeedDir",
+      toOpcode: "ftxt_doSetMotorSpeedDir",
+      fieldChanges: {
+        MOTOR_ID: val => val,
+        DIRECTION: val => val
+      },
+      inputChanges: {
+        SPEED: val => val
+      }
+    }, {
+      fromOpcode: "txt_doSetMotorDir",
+      toOpcode: "ftxt_doSetMotorDir",
+      fieldChanges: {
+        MOTOR_ID: val => val,
+        DIRECTION: val => val
+      }
+    }, {
+      fromOpcode: "txt_doStopMotor",
+      toOpcode: "ftxt_doStopMotor",
+      fieldChanges: {
+        MOTOR_ID: val => val
+      }
+    }, {
+      fromOpcode: "txt_doSetMotorSpeedDirDist",
+      toOpcode: "ftxt_doSetMotorSpeedDirDist",
+      fieldChanges: {
+        MOTOR_ID: val => val,
+        DIRECTION: val => val
+      },
+      inputChanges: {
+        SPEED: val => val,
+        STEPS: val => val
+      }
+    }, {
+      fromOpcode: "txt_doSetMotorSpeedDirSync",
+      toOpcode: "ftxt_doSetMotorSpeedDirSync",
+      fieldChanges: {
+        MOTOR_ID: val => val,
+        DIRECTION: val => val,
+        MOTOR_ID2: val => val,
+        DIRECTION2: val => val
+      },
+      inputChanges: {
+        SPEED: val => val
+      }
+    }, {
+      fromOpcode: "txt_doSetMotorSpeedDirDistSync",
+      toOpcode: "ftxt_doSetMotorSpeedDirDistSync",
+      fieldChanges: {
+        MOTOR_ID: val => val,
+        DIRECTION: val => val,
+        MOTOR_ID2: val => val,
+        DIRECTION2: val => val
+      },
+      inputChanges: {
+        SPEED: val => val,
+        STEPS: val => val
+      }
+    }, {
+      fromOpcode: "txt_doStopMotorAndReset",
+      toOpcode: "ftxt_doStopMotorAndReset",
+      fieldChanges: {
+        MOTOR_ID: val => val
+      }
+    }];
+    const targets = projectData.targets || [];
+    for (const target of targets) {
+      const blocks = target.blocks || {};
+      for (const [blockId, block] of Object.entries(blocks)) {
+        if (!block || !block.opcode) continue;
+        for (const replacement of blockReplacements) {
+          if (block.opcode !== replacement.fromOpcode) continue;
+          block.opcode = replacement.toOpcode;
+          if (replacement.fieldChanges) {
+            for (const [key, transform] of Object.entries(replacement.fieldChanges)) {
+              var _block$fields;
+              const oldVal = (_block$fields = block.fields) === null || _block$fields === void 0 || (_block$fields = _block$fields[key]) === null || _block$fields === void 0 ? void 0 : _block$fields[0];
+              const newVal = typeof transform === "function" ? transform(oldVal) : transform;
+              if (!block.fields) block.fields = {};
+              block.fields[key] = [newVal, null];
+            }
+          }
+          if (replacement.inputChanges) {
+            for (const [key, transform] of Object.entries(replacement.inputChanges)) {
+              var _block$inputs, _oldInput$;
+              const oldInput = (_block$inputs = block.inputs) === null || _block$inputs === void 0 ? void 0 : _block$inputs[key];
+              if (!oldInput) continue;
+              const inputValue = (_oldInput$ = oldInput[1]) === null || _oldInput$ === void 0 ? void 0 : _oldInput$[1];
+              const newVal = typeof transform === "function" ? transform(inputValue) : transform;
+              block.inputs[key][1][1] = newVal;
+            }
+          }
+        }
+      }
+    }
+    if (Array.isArray(projectData.extensions)) {
+      projectData.extensions = projectData.extensions.map(ext => ext === "txt" ? "ftxt" : ext);
+    }
+  }
+  downloadFile(blob, filename) {
+    console.log("Download started:", filename);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }, 100);
   }
   removeDownloadButton() {
     const downloadButton = document.getElementById("ft_download_button");
@@ -100795,6 +101156,25 @@ class Menus {
     a10v.value = 'a10v';
     a5k.text = translate._getText('Analogueresistance');
     a5k.value = 'a5k';
+    return inputModes;
+  }
+  inputModes2() {
+    const d10v = {};
+    const d5k = {};
+    const a10v = {};
+    const a5k = {};
+    const ultrasonic = {};
+    const inputModes = [d10v, d5k, a10v, a5k, ultrasonic];
+    d10v.text = translate._getText('Digitalvoltage');
+    d10v.value = 'd10v';
+    d5k.text = translate._getText('Digitalresistance');
+    d5k.value = 'd5k';
+    a10v.text = translate._getText('Analoguevoltage');
+    a10v.value = 'a10v';
+    a5k.text = translate._getText('Analogueresistance');
+    a5k.value = 'a5k';
+    ultrasonic.text = translate._getText('DistanceSensor');
+    ultrasonic.value = 'ultrasonic';
     return inputModes;
   }
   inputAnalogSensorTypes() {
@@ -101114,6 +101494,22 @@ const message = {
   apikey: {
     'en': 'API key',
     'de': 'API-Schlüssel'
+  },
+  ftduinoflash: {
+    'en': 'Uploading webusb scatch or File',
+    'de': 'Lade WebUSB Scratch oder Datei hoch'
+  },
+  ftduinoupload: {
+    'en': 'Upload file',
+    'de': 'Datei hochladen'
+  },
+  notsupported: {
+    'en': 'The device is currently not supported!\n Please use download button.\n Download the Scratch file before.',
+    'de': 'Das Gerät wird zurzeit nicht unterstützt!\n Bitte benutze den Download-Button.\n Lade davor die Scratch Datei herunter.'
+  },
+  downloadtxt: {
+    'en': 'Now upload the converted file to the TXT via http://192.168.7.2/#txt/Scratch (TXT connected via USB).\n If the page doesnt load, activate the WEB server and the VNC server on the TXT.\n',
+    'de': 'Lade jetzt die convert Datei auf den TXT via http://192.168.7.2/#txt/Scratch (TXT über USB verbunden).\n Falls die Seite nicht läd -> aktiverie auf dem TXT den WEB Server und den VNC Server.\n'
   }
 };
 class Translation {
@@ -102101,9 +102497,11 @@ class ftduino {
           const adjustedIndex = portIndex - 1 + this.indOut;
           let calculatedValue;
           if (valWrite[adjustedIndex] === 0x0b || valWrite[adjustedIndex] === 0x0a) {
-            calculatedValue = parsed.value;
-          } else {
             calculatedValue = parsed.value / 65535 * 255;
+            //calculatedValue = parsed.value;
+          } else {
+            calculatedValue = parsed.value;
+            //calculatedValue = (parsed.value / 65535) * 255;
           }
 
           //valIn[adjustedIndex] = Math.min(calculatedValue, 255);
@@ -102149,7 +102547,7 @@ class ftduino {
     }
     if (val == 0) {
       var dir = "brake";
-      state = 'HI';
+      state = 'LO';
     }
     if (ind < this.indOut / 3) {
       data = this.textEncoder.encode(JSON.stringify({
@@ -102176,9 +102574,9 @@ class ftduino {
   getwriteInMode(ind, val) {
     let data = undefined;
     if (val == 0x0b) {
-      val = "resistance";
+      val = "resistance"; //11
     } else {
-      val = "voltage";
+      val = "voltage"; //10
     }
     data = this.textEncoder.encode(JSON.stringify({
       set: {
@@ -102186,6 +102584,12 @@ class ftduino {
         mode: val
       }
     }));
+    valWrite[ind + this.indOut] = val === "resistance" ? 0x0b : 0x0a;
+    read = 0;
+    inputchange[ind + this.indOut].shift();
+    funcstate[ind + this.indOut] = 0;
+    changing[ind + this.indOut] = false;
+    numruns[ind + this.indOut] = 0;
     return data;
   }
   getwriteCounterreset(ind) {
@@ -102701,6 +103105,7 @@ class WebUSBDevice {
             }
           }));
           connecteddevice.transferOut(outEndpoint, data).then(x => {
+            valWrite[0 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 2,
@@ -102709,6 +103114,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[1 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 4,
@@ -102717,6 +103123,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[2 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 3,
@@ -102725,6 +103132,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[3 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 5,
@@ -102733,6 +103141,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[4 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 6,
@@ -102741,6 +103150,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[5 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 7,
@@ -102749,6 +103159,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[6 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 8,
@@ -102757,6 +103168,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[7 + type.indOut] = 0x0b;
             data = textEncoder.encode("\x1b");
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
@@ -102869,6 +103281,7 @@ class WebUSBDevice {
             }
           }));
           connecteddevice.transferOut(outEndpoint, data).then(x => {
+            valWrite[0 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 2,
@@ -102877,6 +103290,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[1 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 4,
@@ -102885,6 +103299,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[2 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 3,
@@ -102893,6 +103308,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[3 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 5,
@@ -102901,6 +103317,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[4 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 6,
@@ -102909,6 +103326,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[5 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 7,
@@ -102917,6 +103335,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[6 + type.indOut] = 0x0b;
             data = textEncoder.encode(JSON.stringify({
               set: {
                 port: "i" + 8,
@@ -102925,6 +103344,7 @@ class WebUSBDevice {
             }));
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
+            valWrite[7 + type.indOut] = 0x0b;
             data = textEncoder.encode("\x1b");
             return connecteddevice.transferOut(outEndpoint, data);
           }).then(xc => {
@@ -106544,7 +106964,7 @@ class Scratch3ftduinoBlocks {
       docsURI: 'https://technika-karlsruhe.github.io/',
       blocks: [
       //the blocks are already defined in the block.js file and accessed like that:
-      b.getBlock_onOpenClose(), b.getBlock_onCounter(), b.getBlock_onInput2(), b.getBlock_getCounter(), b.getBlock_isCounter(), b.getBlock_getSensor2(), b.getBlock_isClosed(), b.getBlock_dosetLamp2(), b.getBlock_doSetOutput2(), b.getBlock_doResetCounter(), b.getBlock_doConfigureInput(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doStopMotor(),
+      b.getBlock_onOpenClose(), b.getBlock_onCounter(), b.getBlock_onInput2(), b.getBlock_getCounter(), b.getBlock_isCounter(), b.getBlock_getSensor2(), b.getBlock_isClosed(), b.getBlock_doSetLamp2(), b.getBlock_doSetOutput2(), b.getBlock_doResetCounter(), b.getBlock_doConfigureInput2(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doStopMotor(),
       //b.getBlock_doSetMotorSpeedDirDist(),
       b.getBlock_doSetMotorSpeedDirSync()
       //b.getBlock_doSetMotorSpeedDirDistSync(),
@@ -106564,8 +106984,8 @@ class Scratch3ftduinoBlocks {
         inputID: {
           items: main._formatMenuin(inInt, outInt)
         },
-        inputModes: {
-          items: m.inputModes()
+        inputModes2: {
+          items: m.inputModes2()
         },
         inputAnalogSensorTypes2: {
           items: m.inputAnalogSensorTypes2()
@@ -106606,7 +107026,7 @@ class Scratch3ftduinoBlocks {
   doSetOutput2(args) {
     b.doSetOutput(args, controller);
   }
-  doConfigureInput(args) {
+  doConfigureInput2(args) {
     b.doConfigureInput(args, controller);
   }
   doSetMotorSpeed(args) {
@@ -106869,7 +107289,7 @@ class Scratch3TxtBlocks {
           }
         }
       }, {
-        opcode: 'doSetLamp2',
+        opcode: 'doSetLamp',
         text: translate._getText('doSetLamp', this.locale),
         blockType: BlockType.COMMAND,
         arguments: {
@@ -106885,7 +107305,7 @@ class Scratch3TxtBlocks {
           }
         }
       }, {
-        opcode: 'doSetOutput2',
+        opcode: 'doSetOutput',
         text: translate._getText('doSetOutput', this.locale),
         blockType: BlockType.COMMAND,
         arguments: {
@@ -107228,10 +107648,10 @@ class Scratch3TxtBlocks {
     // SENSOR, INPUT
     return b.isClosed(args, controller);
   }
-  doSetLamp2(args) {
+  doSetLamp(args) {
     b.doSetLamp(args, controller);
   }
-  doSetOutput2(args) {
+  doSetOutput(args) {
     b.doSetOutput(args, controller);
   }
   doConfigureInput(args) {
@@ -108336,7 +108756,9 @@ class Scratch3LTBlocks {
       b.getBlock_onOpenClose(),
       //b.getBlock_onInput(),
       //b.getBlock_getSensor(),
-      b.getBlock_isClosed(), b.getBlock_dosetLamp2(), b.getBlock_doSetOutput2(), b.getBlock_doConfigureInput(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor()],
+      b.getBlock_isClosed(), b.getBlock_doSetLamp2(), b.getBlock_doSetOutput2(),
+      //b.getBlock_doConfigureInput(),
+      b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor()],
       menus: {
         // defining the different Menus, identified by the blocks through their name
         motorID: {
@@ -113237,7 +113659,7 @@ class Scratch3TXBlocks {
       docsURI: 'https://technika-karlsruhe.github.io/',
       blocks: [
       //the blocks are already defined in the block.js file and accessed like that:
-      b.getBlock_onOpenClose(), b.getBlock_onCounter(), b.getBlock_onInput2(), b.getBlock_getCounter(), b.getBlock_getSensor2(), b.getBlock_isClosed(), b.getBlock_dosetLamp2(), b.getBlock_doSetOutput2(), b.getBlock_doResetCounter(), b.getBlock_doConfigureInput(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor(), b.getBlock_doSetMotorSpeedDirDist(), b.getBlock_doSetMotorSpeedDirSync(), b.getBlock_doSetMotorSpeedDirDistSync(), b.getBlock_doStopMotorAndReset()],
+      b.getBlock_onOpenClose(), b.getBlock_onCounter(), b.getBlock_onInput2(), b.getBlock_getCounter(), b.getBlock_getSensor2(), b.getBlock_isClosed(), b.getBlock_doSetLamp2(), b.getBlock_doSetOutput2(), b.getBlock_doResetCounter(), b.getBlock_doConfigureInput(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor(), b.getBlock_doSetMotorSpeedDirDist(), b.getBlock_doSetMotorSpeedDirSync(), b.getBlock_doSetMotorSpeedDirDistSync(), b.getBlock_doStopMotorAndReset()],
       menus: {
         // defining the different Menus, identified by the blocks through their name
         counterID: {
@@ -113441,7 +113863,7 @@ class Scratch3TXT40Blocks {
       docsURI: 'https://technika-karlsruhe.github.io/',
       blocks: [
       //the blocks are already defined in the block.js file and accessed like that:
-      b.getBlock_onOpenClose(), b.getBlock_onCounter(), b.getBlock_onInput2(), b.getBlock_getCounter(), b.getBlock_getSensor2(), b.getBlock_isClosed(), b.getBlock_doPlaySound(), b.getBlock_doPlaySoundWait(), b.getBlock_dosetLamp2(), b.getBlock_doSetOutput2(), b.getBlock_doResetCounter(), b.getBlock_doConfigureInput(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor(), b.getBlock_doSetMotorSpeedDirDist(), b.getBlock_doSetMotorSpeedDirSync(), b.getBlock_doSetMotorSpeedDirDistSync(), b.getBlock_doStopMotorAndReset(), b.getBlock_doSetServoPosition()],
+      b.getBlock_onOpenClose(), b.getBlock_onCounter(), b.getBlock_onInput2(), b.getBlock_getCounter(), b.getBlock_getSensor2(), b.getBlock_isClosed(), b.getBlock_doPlaySound(), b.getBlock_doPlaySoundWait(), b.getBlock_doSetLamp2(), b.getBlock_doSetOutput2(), b.getBlock_doResetCounter(), b.getBlock_doConfigureInput2(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor(), b.getBlock_doSetMotorSpeedDirDist(), b.getBlock_doSetMotorSpeedDirSync(), b.getBlock_doSetMotorSpeedDirDistSync(), b.getBlock_doStopMotorAndReset(), b.getBlock_doSetServoPosition()],
       menus: {
         // defining the different Menus, identified by the blocks through their name
         counterID: {
@@ -113459,8 +113881,8 @@ class Scratch3TXT40Blocks {
         inputID: {
           items: main._formatMenuin(inInt, outInt)
         },
-        inputModes: {
-          items: m.inputModes()
+        inputModes2: {
+          items: m.inputModes2()
         },
         inputAnalogSensorTypes2: {
           items: m.inputAnalogSensorTypes2()
@@ -113501,7 +113923,7 @@ class Scratch3TXT40Blocks {
   doSetOutput2(args) {
     b.doSetOutput(args, controller);
   }
-  doConfigureInput(args) {
+  doConfigureInput2(args) {
     b.doConfigureInput(args, controller);
   }
   doSetMotorSpeed(args) {
@@ -113563,6 +113985,210 @@ class Scratch3TXT40Blocks {
   }
 }
 module.exports = Scratch3TXT40Blocks;
+
+/***/ }),
+
+/***/ "../scratch-vm/src/extensions/scratch3_txt/index.js":
+/*!**********************************************************!*\
+  !*** ../scratch-vm/src/extensions/scratch3_txt/index.js ***!
+  \**********************************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+/*
+  scratch3_txt/index.js
+  get info method is called by scratch upon opening the extensions menu. Once the extension called TXT is opened a 
+  connection can be established to a fischertechnik TXT controller by clicking the orange connect button. Then, holt the red "Select"-Button
+  on the TXT until the blinking blue LED blinks with a much higher frequency. You should see the right controller now in the bluetooth connection 
+  window of the browser. Select and pair our controller. Wait until the LED on the TXT turns orange. Depending on whether you allowed notifications,
+  you will either receive a notification or an alert when the connection is finished and the controller ready to be used.
+
+  Currently only English and German translations are available.
+
+*/
+const Block = __webpack_require__(/*! ../ft_source/block */ "../scratch-vm/src/extensions/ft_source/block.js");
+const Main = __webpack_require__(/*! ../ft_source/index.js */ "../scratch-vm/src/extensions/ft_source/index.js");
+const Menus = __webpack_require__(/*! ../ft_source/menus.js */ "../scratch-vm/src/extensions/ft_source/menus.js");
+const blockIconURI = __webpack_require__(/*! ./txt_small.png */ "../scratch-vm/src/extensions/scratch3_txt/txt_small.png");
+var b = new Block(); // access block.js 
+var main = new Main(); // access index.js
+var m = new Menus(); // access menus.js
+
+var outInt = 12; // number of outputs *3 --> 4 for each individual output 2 for each motor set 
+
+var inInt = 8; // number of inputs
+
+var servoInt = 0; // number of servos
+
+var counterInt = 4; // number of counters
+
+b.defaultValue(outInt, inInt, servoInt);
+
+/**
+ * Icon svg to be displayed at the left edge of each extension block, encoded as a data URI.
+ * @type {string}
+ */
+// eslint-disable-next-line max-len
+
+/**
+ * Class for the txt blocks in Scratch 3.0
+ * @constructor
+ */
+
+const EXTENSION_ID = 'txt';
+class Scratch3TXTBlocks {
+  constructor(runtime) {
+    /**
+     * The runtime instantiating this block package.
+     * @type {Runtime}
+     */
+    this.runtime = runtime;
+    this.runtime.on('PROJECT_STOP_ALL', this.reset.bind(this)); // necessary to use the reset button 
+
+    extensionnumber++; // increase the number of extensions
+    openedextensions.push("TXT");
+    if (extensionnumber > 1) {
+      main.addselections();
+    } else {
+      type = "TXT";
+    }
+    main.addButton();
+    main.knownUsbDeviceConnected('none'); // try autoconnection 
+    navigator.usb.addEventListener("connect", main.knownUsbDeviceConnected); // set up an Eventlistener which will attempt to autoconnect once a paired device is detected
+  }
+
+  /**
+   * @returns {object} metadata for this extension and its blocks.
+   */
+  getInfo() {
+    //translate.setup(); // setup translation
+    b.setup(); // setup translation for blocks
+    m.setup(); // setup translation for menus
+    return {
+      //Information returned to scratch gui
+      id: EXTENSION_ID,
+      name: 'TXT',
+      blockIconURI: blockIconURI,
+      showStatusButton: false,
+      // we are using our own
+      docsURI: 'https://technika-karlsruhe.github.io/',
+      blocks: [
+      //the blocks are already defined in the block.js file and accessed like that:
+      b.getBlock_onOpenClose(), b.getBlock_onCounter(), b.getBlock_onInput2(), b.getBlock_getCounter(), b.getBlock_getSensor2(), b.getBlock_isClosed(), b.getBlock_doPlaySound(), b.getBlock_doPlaySoundWait(), b.getBlock_doSetLamp2(), b.getBlock_doSetOutput2(), b.getBlock_doResetCounter(), b.getBlock_doConfigureInput2(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor(), b.getBlock_doSetMotorSpeedDirDist(), b.getBlock_doSetMotorSpeedDirSync(), b.getBlock_doSetMotorSpeedDirDistSync(), b.getBlock_doStopMotorAndReset()],
+      menus: {
+        // defining the different Menus, identified by the blocks through their name
+        counterID: {
+          items: main._formatMenuCounter(counterInt, servoInt, outInt, inInt)
+        },
+        motorID: {
+          items: main._formatMenuM(outInt)
+        },
+        outputID: {
+          items: main._formatMenuOut(outInt)
+        },
+        inputID: {
+          items: main._formatMenuin(inInt, outInt)
+        },
+        inputModes2: {
+          items: m.inputModes2()
+        },
+        inputAnalogSensorTypes2: {
+          items: m.inputAnalogSensorTypes2()
+        },
+        inputDigitalSensorTypes: {
+          items: m.inputDigitalSensorTypes()
+        },
+        inputDigitalSensorChangeTypes: {
+          items: m.inputDigitalSensorChangeTypes()
+        },
+        motorDirection: {
+          items: m.motorDirection()
+        },
+        compares: {
+          items: m.compares()
+        }
+      }
+    };
+  }
+  //Block functions, they are also defined in the block.js file and can be accessed like this:
+  onOpenClose(args) {
+    return b.onOpenClose(args, controller);
+  }
+  onInput2(args) {
+    // SENSOR, INPUT, OPERATOR, VALUE
+    return b.onInput(args, controller);
+  }
+  getSensor2(args) {
+    return b.getSensor(args, controller);
+  }
+  isClosed(args) {
+    // SENSOR, INPUT
+    return b.isClosed(args, controller);
+  }
+  doSetLamp2(args) {
+    b.doSetLamp(args, controller);
+  }
+  doSetOutput2(args) {
+    b.doSetOutput(args, controller);
+  }
+  doConfigureInput2(args) {
+    b.doConfigureInput(args, controller);
+  }
+  doSetMotorSpeed(args) {
+    b.doSetMotorSpeed(args, controller);
+  }
+  doSetMotorSpeedDir(args) {
+    b.doSetMotorSpeedDir(args, controller);
+  }
+  doSetMotorDir(args) {
+    b.doSetMotorDir(args, controller);
+  }
+  doStopMotor(args) {
+    b.doStopMotor(args, controller);
+  }
+  onCounter(args) {
+    // COUNTER_ID, OPERATOR, VALUE
+    b.onCounter(args, controller);
+  }
+  getCounter(args) {
+    // COUNTER_ID
+    b.getCounter(args, controller);
+  }
+  doPlaySound(args) {
+    // SOUND_ID
+    b.doPlaySound(args, controller);
+  }
+  doPlaySoundWait(args) {
+    // SOUND_ID
+    b.doPlaySoundWait(args, controller);
+  }
+  doResetCounter(args) {
+    // COUNTER_ID
+    b.doResetCounter(args, controller);
+  }
+  doSetMotorSpeedDirDist(args) {
+    // MOTOR_ID, SPEED, DIRECTION, DISTANCE
+    b.doSetMotorSpeedDirDist(args, controller);
+  }
+  doSetMotorSpeedDirSync(args) {
+    // MOTOR_ID, SPEED, DIRECTION, SYNC
+    b.doSetMotorSpeedDirSync(args, controller);
+  }
+  doSetMotorSpeedDirDistSync(args) {
+    // MOTOR_ID, SPEED, DIRECTION, DISTANCE, SYNC
+    b.doSetMotorSpeedDirDistSync(args, controller);
+  }
+  doStopMotorAndReset(args) {
+    // MOTOR_ID
+    b.doStopMotorAndReset(args, controller);
+  }
+  reset() {
+    // reset function triggered by pressing the red stop button
+    if (controller != undefined) {
+      controller.reset();
+    }
+  }
+}
+module.exports = Scratch3TXTBlocks;
 
 /***/ }),
 
@@ -417592,6 +418218,17 @@ module.exports = __webpack_require__.p + "static/assets/tx_small.422e50463d0a9ad
 
 "use strict";
 module.exports = __webpack_require__.p + "static/assets/txt40_small.cc4ad7ccfb5248bd85a7.png";
+
+/***/ }),
+
+/***/ "../scratch-vm/src/extensions/scratch3_txt/txt_small.png":
+/*!***************************************************************!*\
+  !*** ../scratch-vm/src/extensions/scratch3_txt/txt_small.png ***!
+  \***************************************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "data:image/png;base64,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";
 
 /***/ }),
 
