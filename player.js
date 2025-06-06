@@ -98135,6 +98135,11 @@ module.exports = TargetType;
   \*******************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 const ArgumentType = __webpack_require__(/*! ../../extension-support/argument-type */ "../scratch-vm/src/extension-support/argument-type.js");
 const BlockType = __webpack_require__(/*! ../../extension-support/block-type */ "../scratch-vm/src/extension-support/block-type.js");
 const Main = __webpack_require__(/*! ../ft_source/index.js */ "../scratch-vm/src/extensions/ft_source/index.js");
@@ -98606,6 +98611,39 @@ class Block {
       }
     };
   }
+  getBlock_doPlaySound2() {
+    return {
+      opcode: 'doPlaySound2',
+      text: translate._getText('doPlaySound2', this.locale),
+      blockType: BlockType.COMMAND,
+      arguments: {
+        SOUND_ID: {
+          type: ArgumentType.NUMBER,
+          menu: 'soundfiles',
+          defaultValue: '01_Airplane.wav'
+        },
+        LOOP: {
+          type: ArgumentType.BOOLEAN,
+          menu: 'LOOP',
+          defaultValue: 'no'
+        }
+      }
+    };
+  }
+  getBlock_doStopSound() {
+    return {
+      opcode: 'doStopSound',
+      text: translate._getText('doStopSound', this.locale),
+      blockType: BlockType.COMMAND,
+      arguments: {
+        //NUM: {
+        //    type: ArgumentType.NUMBER,
+        //    defaultValue: 1,
+        //    maxValue: 29
+        //}
+      }
+    };
+  }
   getBlock_doResetCounter() {
     return {
       opcode: 'doResetCounter',
@@ -98740,7 +98778,7 @@ class Block {
     };
   }
   //Block functions
-  onOpenClose(args, controller) {
+  onOpenClose2(args, controller) {
     if (controller != undefined && controller.connected == true) {
       if (controller.getvalWrite(parseInt(args.INPUT)) != 0x0b && (args.SENSOR == 'sens_button' || args.SENSOR == 'sens_lightBarrier' || args.SENSOR == 'sens_reed' || args.SENSOR == 'sens_trail')) {
         // check if the mode has to be changed 
@@ -98777,7 +98815,81 @@ class Block {
       return false;
     }
   }
+  onOpenClose(args, controller) {
+    if (controller && controller.connected) {
+      const input = parseInt(args.INPUT);
+      const currentMode = controller.getvalWrite(input);
+      const sensorModeMap = {
+        'sens_button': 0x0b,
+        'sens_lightBarrier': 0x0b,
+        'sens_reed': 0x0b,
+        'sens_trail': 0x0b
+      };
+      const targetMode = sensorModeMap[args.SENSOR];
+      if (targetMode !== undefined && currentMode !== targetMode) {
+        controller.setchanging(input, true);
+      }
+      if (controller.getchanging(input)) {
+        controller.changeInMode(_objectSpread(_objectSpread({}, args), {}, {
+          TARGET_MODE: targetMode
+        }));
+        if (controller.getnumruns(input) < 100) {
+          controller.setnumruns(input, controller.getnumruns(input) + 1);
+        } else {
+          controller.setnumruns(input, 0);
+          controller.setfuncstate(input, 0);
+          controller.setchanging(input, false);
+        }
+        return false;
+      } else {
+        if (args.OPENCLOSE == 'closed') {
+          return controller.getvalIn(input) != 255;
+        } else {
+          return controller.getvalIn(input) == 255;
+        }
+      }
+    } else {
+      return false;
+    }
+  }
   onInput(args, controller) {
+    if (controller && controller.connected) {
+      const input = parseInt(args.INPUT);
+      const currentMode = controller.getvalWrite(input);
+      const sensorModeMap = {
+        'sens_color': 0x0a,
+        'sens_ntc': 0x0b,
+        'sens_photo': 0x0b,
+        'sens_distance': 0x0c
+      };
+      const targetMode = sensorModeMap[args.SENSOR];
+      if (targetMode !== undefined && currentMode !== targetMode) {
+        controller.setchanging(input, true);
+      }
+      if (controller.getchanging(input)) {
+        controller.changeInMode(_objectSpread(_objectSpread({}, args), {}, {
+          TARGET_MODE: targetMode
+        }));
+        if (controller.getnumruns(input) < 100) {
+          controller.setnumruns(input, controller.getnumruns(input) + 1);
+        } else {
+          controller.setnumruns(input, 0);
+          controller.setfuncstate(input, 0);
+          controller.setchanging(input, false);
+        }
+        return false;
+      } else {
+        if (args.OPERATOR == '<') {
+          return controller.getvalIn(input) < args.VALUE;
+        } else {
+          return controller.getvalIn(input) > args.VALUE;
+        }
+      }
+    } else {
+      return false;
+    }
+  }
+  onInput2(args, controller) {
     // SENSOR, INPUT, OPERATOR, VALUE
     if (controller != undefined && controller.connected == true) {
       if (controller.getvalWrite(parseInt(args.INPUT)) != 0x0b && (args.SENSOR == 'sens_ntc' || args.SENSOR == 'sens_photo')) {
@@ -98785,6 +98897,9 @@ class Block {
         controller.setchanging(parseInt(args.INPUT), true);
       }
       if (controller.getvalWrite(parseInt(args.INPUT)) != 0x0a && args.SENSOR == 'sens_color') {
+        controller.setchanging(parseInt(args.INPUT), true);
+      }
+      if (controller.getvalWrite(parseInt(args.INPUT)) != 0x0c && args.SENSOR == 'sens_distance') {
         controller.setchanging(parseInt(args.INPUT), true);
       }
       if (controller.getchanging(parseInt(args.INPUT)) == true) {
@@ -98829,6 +98944,9 @@ class Block {
         case 'sens_photo':
           controller.write_Value(parseInt(args.INPUT), 0x0b);
           break;
+        case 'sens_distance':
+          controller.write_Value(parseInt(args.INPUT), 0x0c);
+          break;
       }
       return controller.getvalIn(parseInt(args.INPUT));
     } else {
@@ -98836,6 +98954,60 @@ class Block {
     }
   }
   isClosed(args, controller) {
+    // SENSOR, INPUT
+    if (controller && controller.connected) {
+      const input = parseInt(args.INPUT);
+      const sensorModeMap = {
+        'sens_button': 0x0b,
+        'sens_lightBarrier': 0x0b,
+        'sens_reed': 0x0b,
+        'sens_trail': 0x0b
+      };
+      const targetMode = sensorModeMap[args.SENSOR];
+      if (targetMode !== undefined && controller.getvalWrite(input) !== targetMode) {
+        controller.write_Value(input, targetMode);
+      }
+      const x = controller.getvalIn(input);
+      return x !== 255;
+    } else {
+      return false;
+    }
+  }
+  isClosedoldnew(args, controller) {
+    // SENSOR, INPUT
+    if (controller && controller.connected) {
+      const input = parseInt(args.INPUT);
+      const currentMode = controller.getvalWrite(input);
+      const sensorModeMap = {
+        'sens_button': 0x0b,
+        'sens_lightBarrier': 0x0b,
+        'sens_reed': 0x0b,
+        'sens_trail': 0x0b
+      };
+      const targetMode = sensorModeMap[args.SENSOR];
+      if (targetMode !== undefined && currentMode !== targetMode) {
+        controller.setchanging(input, true);
+      }
+      if (controller.getchanging(input)) {
+        controller.changeInMode(_objectSpread(_objectSpread({}, args), {}, {
+          TARGET_MODE: targetMode
+        }));
+        if (controller.getnumruns(input) < 100) {
+          controller.setnumruns(input, controller.getnumruns(input) + 1);
+        } else {
+          controller.setnumruns(input, 0);
+          controller.setfuncstate(input, 0);
+          controller.setchanging(input, false);
+        }
+        return false;
+      }
+      const x = controller.getvalIn(input);
+      return x != 255;
+    } else {
+      return false;
+    }
+  }
+  isClosed2(args, controller) {
     // SENSOR, INPUT
     if (controller != undefined && controller.connected == true) {
       // make sure a controller is actually connected
@@ -98875,11 +99047,22 @@ class Block {
     }
   }
   doConfigureInput(args, controller) {
+    //if(controller!=undefined &&controller.connected==true){    
+    //    if(args.MODE=='d10v'||args.MODE=='a10v'){
+    //        controller.write_Value(parseInt(args.INPUT), 0x0a);
+    //    }else{
+    //        controller.write_Value(parseInt(args.INPUT), 0x0b);
+    //    }
+    //}
     if (controller != undefined && controller.connected == true) {
-      if (args.MODE == 'd10v' || args.MODE == 'a10v') {
+      if (args.MODE === 'd10v' || args.MODE === 'a10v') {
         controller.write_Value(parseInt(args.INPUT), 0x0a);
-      } else {
+      } else if (args.MODE === 'd5k' || args.MODE === 'a5k') {
         controller.write_Value(parseInt(args.INPUT), 0x0b);
+      } else if (args.MODE === 'ultrasonic') {
+        controller.write_Value(parseInt(args.INPUT), 0x0c);
+      } else {
+        console.log("unknown mode");
       }
     }
   }
@@ -98941,24 +99124,156 @@ class Block {
       }
     }
   }
-  doPlaySound(args, controller) {}
-  doPlaySoundWait(args, controller) {}
+  doPlaySound(args, controller) {
+    if (controller != undefined && controller.connected == true) {
+      controller.write_Value(30, args.NUM);
+    }
+  }
+  doPlaySoundWait(args, controller) {
+    if (controller != undefined && controller.connected == true) {
+      controller.write_Value(33, args.NUM);
+    }
+  }
+  doPlaySound2(args, controller) {
+    if (controller != undefined && controller.connected == true) {
+      if (args.LOOP == 'yes') {
+        controller.write_Value(30, args.SOUND_ID);
+      } else {
+        controller.write_Value(31, args.SOUND_ID);
+      }
+    }
+  }
+  doStopSound(args, controller) {
+    if (controller != undefined && controller.connected == true) {
+      controller.write_Value(32, args.NUM);
+    }
+  }
   doResetCounter(args, controller) {
     if (controller != undefined && controller.connected == true) {
       controller.write_Value(parseInt(args.COUNTER_ID), 0);
     }
   }
-  doSetMotorSpeedDirDist(args, controller) {}
+  doSetMotorSpeedDirDist(args, controller) {
+    if (controller != undefined && controller.connected == true) {
+      const SPEED_FACTOR = 15.875;
+      const motorId = parseInt(args.MOTOR_ID);
+      const direction = parseInt(args.DIRECTION);
+      const steps = parseInt(args.STEPS);
+      const speed = parseFloat(args.SPEED);
+      const scaledSpeed = speed * SPEED_FACTOR * direction;
+      const c = motorId + type.indIn + type.indOut + type.indServo;
+
+      // initialize tracking storage
+      if (!controller._activeMoves) {
+        controller._activeMoves = {};
+      }
+
+      // start new move
+      const startPos = controller.getvalIn(c);
+      controller._activeMoves[motorId] = {
+        startPos: startPos,
+        targetSteps: Math.abs(steps),
+        running: true
+      };
+
+      //console.log(`[Motor ${motorId}] StartPos=${startPos}, TargetSteps=${steps}, Dir=${direction}`);
+
+      const check = () => {
+        const move = controller._activeMoves[motorId];
+
+        // If the move was stopped or deleted
+        if (!move || !move.running) return;
+        const currentPos = controller.getvalIn(c);
+        const distanceTravelled = Math.abs(currentPos - move.startPos);
+        if (distanceTravelled >= move.targetSteps) {
+          controller.write_Value(motorId, 0);
+          controller._activeMoves[motorId].running = false;
+          //console.log(`[Motor ${motorId}] Ziel erreicht. Motor gestoppt.`);
+        } else {
+          setTimeout(check, 50);
+        }
+      };
+      controller.write_Value(motorId, scaledSpeed);
+      setTimeout(check, 50);
+    }
+  }
   doSetMotorSpeedDirSync(args, controller) {
     // not working properly yet, most likely an issue with not writing fast enough
+    console.log("doSetMotorSpeedDirSync");
+    console.log(args.MOTOR_ID);
+    console.log(args.MOTOR_ID2);
+    console.log(args.DIRECTION);
+    console.log(args.DIRECTION2);
+    console.log(args.SPEED);
     // possible correction: check last storage entry as well 
     if (controller != undefined && controller.connected == true) {
       controll_motor_syncronosation(args, controller, undefined, undefined);
     }
   }
-  doSetMotorSpeedDirDistSync(args, controller) {}
+  doSetMotorSpeedDirDistSync(args, controller) {
+    if (controller != undefined && controller.connected == true) {
+      const SPEED_FACTOR = 15.875;
+      const motorId1 = parseInt(args.MOTOR_ID);
+      const motorId2 = parseInt(args.MOTOR_ID2);
+      const dir1 = parseInt(args.DIRECTION);
+      const dir2 = parseInt(args.DIRECTION2);
+      const steps = Math.abs(parseInt(args.STEPS));
+      const speed = parseFloat(args.SPEED);
+      const scaledSpeed1 = speed * SPEED_FACTOR * dir1;
+      const scaledSpeed2 = speed * SPEED_FACTOR * dir2;
+      const c1 = motorId1 + type.indIn + type.indOut + type.indServo;
+      const c2 = motorId2 + type.indIn + type.indOut + type.indServo;
+      if (!controller._activeMoves) {
+        controller._activeMoves = {};
+      }
+      const startPos1 = controller.getvalIn(c1);
+      const startPos2 = controller.getvalIn(c2);
+      controller._activeMoves[motorId1] = {
+        startPos: startPos1,
+        targetSteps: steps,
+        running: true
+      };
+      controller._activeMoves[motorId2] = {
+        startPos: startPos2,
+        targetSteps: steps,
+        running: true
+      };
+
+      //console.log(`[Motor ${motorId1}] StartPos=${startPos1}, TargetSteps=${steps}, Dir=${dir1}`);
+      //console.log(`[Motor ${motorId2}] StartPos=${startPos2}, TargetSteps=${steps}, Dir=${dir2}`);
+
+      const check = () => {
+        var _controller$_activeMo, _controller$_activeMo2;
+        const move1 = controller._activeMoves[motorId1];
+        const move2 = controller._activeMoves[motorId2];
+        const pos1 = controller.getvalIn(c1);
+        const pos2 = controller.getvalIn(c2);
+        if (move1 !== null && move1 !== void 0 && move1.running) {
+          const dist1 = Math.abs(pos1 - move1.startPos);
+          if (dist1 >= move1.targetSteps) {
+            controller.write_Value(motorId1, 0);
+            controller._activeMoves[motorId1].running = false;
+            //console.log(`[Motor ${motorId1}] Ziel erreicht. Motor gestoppt.`);
+          }
+        }
+        if (move2 !== null && move2 !== void 0 && move2.running) {
+          const dist2 = Math.abs(pos2 - move2.startPos);
+          if (dist2 >= move2.targetSteps) {
+            controller.write_Value(motorId2, 0);
+            controller._activeMoves[motorId2].running = false;
+            //console.log(`[Motor ${motorId2}] Ziel erreicht. Motor gestoppt.`);
+          }
+        }
+        if ((_controller$_activeMo = controller._activeMoves[motorId1]) !== null && _controller$_activeMo !== void 0 && _controller$_activeMo.running || (_controller$_activeMo2 = controller._activeMoves[motorId2]) !== null && _controller$_activeMo2 !== void 0 && _controller$_activeMo2.running) {
+          setTimeout(check, 50);
+        }
+      };
+      controller.write_Value(motorId1, scaledSpeed1);
+      controller.write_Value(motorId2, scaledSpeed2);
+      setTimeout(check, 50);
+    }
+  }
   doStopMotorAndReset(args, controller) {
-    //useless
     if (controller != undefined && controller.connected == true) {
       controller.write_Value(parseInt(args.MOTOR_ID), 0);
       setTimeout(x => {
@@ -99051,6 +99366,7 @@ var numruns = new Array();
 var type;
 var notificationTimer = 0;
 var connect = undefined;
+var bleWriteBusy = false;
 
 //Controller specifications 
 class BTSmart {
@@ -99237,57 +99553,126 @@ var input = {
 };
 function connectIn() {
   // automatic connection of all Inputs and event Listeners+Notifications
-  characteristic = serviceIn.getCharacteristic(type.uuidsIn[e]).then(function connectI(characteristic) {
-    characteristic.addEventListener('characteristicvaluechanged', input['in_' + e]);
-    characteristic.startNotifications();
-    charI[e + type.indOut] = characteristic;
-    charI[e + type.indOut].readValue();
-  }).then(function ehoeher() {
-    e = e + 1;
-    if (e < type.indIn) {
-      connectIn();
-    } else {}
-  });
-}
-function connectServo() {
-  if (type.indServo > 0) {
-    serviceOut.getCharacteristics().then(x => {
-      charWrite[type.indOut + type.indIn] = x[3];
-      valWrite[type.indOut + type.indIn] = 0;
-      return x[3].writeValue(new Uint8Array([0]));
-    }).then(x => {
-      s = s + 1;
-      if (s < type.indServo) {
-        indServo();
+  if (ismobile()) {
+    setTimeout(() => {
+      characteristic = serviceIn.getCharacteristic(type.uuidsIn[e]).then(function connectI(characteristic) {
+        characteristic.addEventListener('characteristicvaluechanged', input['in_' + e]);
+        characteristic.startNotifications().then(() => {
+          if (ismobile()) {
+            return new Promise(resolve => setTimeout(resolve, 800));
+          }
+        }).then(() => {
+          charI[e + type.indOut] = characteristic;
+          return charI[e + type.indOut].readValue();
+        });
+      }).then(function ehoeher() {
+        e = e + 1;
+        if (e < type.indIn) {
+          connectIn();
+        } else {}
+      });
+    }, 800);
+  } else {
+    characteristic = serviceIn.getCharacteristic(type.uuidsIn[e]).then(function connectI(characteristic) {
+      characteristic.addEventListener('characteristicvaluechanged', input['in_' + e]);
+      characteristic.startNotifications();
+      charI[e + type.indOut] = characteristic;
+      charI[e + type.indOut].readValue();
+    }).then(function ehoeher() {
+      e = e + 1;
+      if (e < type.indIn) {
+        connectIn();
       } else {}
     });
   }
 }
+function connectServo() {
+  if (ismobile()) {
+    setTimeout(() => {
+      if (type.indServo > 0) {
+        serviceOut.getCharacteristics().then(x => {
+          charWrite[type.indOut + type.indIn] = x[3];
+          valWrite[type.indOut + type.indIn] = 0;
+          return x[3].writeValue(new Uint8Array([0]));
+        }).then(x => {
+          s = s + 1;
+          if (s < type.indServo) {
+            indServo();
+          } else {}
+        });
+      }
+    }, 1000);
+  } else {
+    if (type.indServo > 0) {
+      serviceOut.getCharacteristics().then(x => {
+        charWrite[type.indOut + type.indIn] = x[3];
+        valWrite[type.indOut + type.indIn] = 0;
+        return x[3].writeValue(new Uint8Array([0]));
+      }).then(x => {
+        s = s + 1;
+        if (s < type.indServo) {
+          indServo();
+        } else {}
+      });
+    }
+  }
+}
 function connectOut() {
   //connection of all Outputs
-  characteristic = serviceOut.getCharacteristic(type.uuidsOut[f]).then(characteristic => {
-    charWrite[f] = characteristic;
-    return charWrite[f].writeValue(new Uint8Array([0]));
-  }).then(x => {
-    valWrite[f] = 0;
-    f = f + 1;
-    if (f < type.indOut / 3) {
-      connectOut();
-    } else {}
-  });
+  if (ismobile()) {
+    setTimeout(() => {
+      characteristic = serviceOut.getCharacteristic(type.uuidsOut[f]).then(async characteristic => {
+        charWrite[f] = characteristic;
+        await characteristic.writeValue(new Uint8Array([0]));
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }).then(x => {
+        valWrite[f] = 0;
+        f = f + 1;
+        if (f < type.indOut / 3) {
+          connectOut();
+        } else {}
+      });
+    }, 500);
+  } else {
+    characteristic = serviceOut.getCharacteristic(type.uuidsOut[f]).then(characteristic => {
+      charWrite[f] = characteristic;
+      return charWrite[f].writeValue(new Uint8Array([0]));
+    }).then(x => {
+      valWrite[f] = 0;
+      f = f + 1;
+      if (f < type.indOut / 3) {
+        connectOut();
+      } else {}
+    });
+  }
 }
 function connectIMo() {
   // connection of IModes
-  characteristic = serviceIMode.getCharacteristic(type.uuidsIM[g]).then(function connect(characteristic) {
-    charWrite[g + type.indOut] = characteristic;
-    charWrite[g + type.indOut].writeValue(new Uint8Array([0x0b]));
-    valWrite[g + type.indOut] = 0x0b;
-  }).then(function ghoeher() {
-    g = g + 1;
-    if (g < type.indIn) {
-      connectIMo();
-    } else {}
-  });
+  if (ismobile()) {
+    setTimeout(() => {
+      characteristic = serviceIMode.getCharacteristic(type.uuidsIM[g]).then(function connect(characteristic) {
+        charWrite[g + type.indOut] = characteristic;
+        charWrite[g + type.indOut].writeValue(new Uint8Array([0x0b]));
+        valWrite[g + type.indOut] = 0x0b;
+      }).then(function ghoeher() {
+        g = g + 1;
+        if (g < type.indIn) {
+          connectIMo();
+        } else {}
+      });
+    }, 500);
+  } else {
+    characteristic = serviceIMode.getCharacteristic(type.uuidsIM[g]).then(function connect(characteristic) {
+      charWrite[g + type.indOut] = characteristic;
+      charWrite[g + type.indOut].writeValue(new Uint8Array([0x0b]));
+      valWrite[g + type.indOut] = 0x0b;
+    }).then(function ghoeher() {
+      g = g + 1;
+      if (g < type.indIn) {
+        connectIMo();
+      } else {}
+    });
+  }
 }
 function isTablet() {
   const userAgent = navigator.userAgent.toLowerCase();
@@ -99382,6 +99767,23 @@ class BLEDevice {
   }
   write(ind) {
     // actual write method
+    if (!charWrite[ind]) {
+      setTimeout(() => this.write(ind), 100);
+      return;
+    }
+    function waitForBleFree() {
+      return new Promise(resolve => {
+        function check() {
+          if (!bleWriteBusy) {
+            bleWriteBusy = true;
+            resolve();
+          } else {
+            setTimeout(check, 10);
+          }
+        }
+        check();
+      });
+    }
     if (valWrite[ind] == stor[ind][0]) {
       // if we would write the same value again we can skip it in order to not block the connection
       stor[ind].shift();
@@ -99398,52 +99800,77 @@ class BLEDevice {
           //an output value has to be changed  
           if (valWrite[ind] == stor[ind][0] || valWrite[ind] == 0 || stor[ind][0] == 0) {
             //if none of these is true, we have to stop the motor first 
-            charWrite[ind].writeValue(new Uint8Array([stor[ind][0]])).then(x => {
-              // write value 
+            waitForBleFree().then(() => {
+              return charWrite[ind].writeValue(new Uint8Array([stor[ind][0]]));
+            }).then(x => {
+              bleWriteBusy = false;
               valWrite[ind] = val; // change memory 
               charZust[ind] = 0; // switch to no curret task
               stor[ind].shift(); // delete from storage 
+              if (ismobile()) {
+                return new Promise(resolve => setTimeout(resolve, 100));
+              }
+            }).then(() => {
               if (stor[ind].length > 0) {
                 // if there are still elements in the storage do it again 
                 this.write(ind);
               }
             }).catch(error => {
+              bleWriteBusy = false;
               console.log(error);
             });
           } else {
-            charWrite[ind].writeValue(new Uint8Array(0)).then(x => {
-              //stop motor
-              charWrite[ind].writeValue(new Uint8Array([stor[ind][0]])).then(x => {
-                // write value 
-                valWrite[ind] = val; // change memory 
-                charZust[ind] = 0; // switch to no curret task
-                stor[ind].shift(); // delete from storage 
-                if (stor[ind].length > 0) {
-                  // if there are still elements in the storage do it again 
-                  this.write(ind);
-                }
-              });
+            waitForBleFree().then(() => {
+              return charWrite[ind].writeValue(new Uint8Array([0]));
+            }).then(x => {
+              bleWriteBusy = false;
+              if (ismobile()) {
+                return new Promise(resolve => setTimeout(resolve, 100));
+              }
+            }).then(() => {
+              return waitForBleFree().then(() => charWrite[ind].writeValue(new Uint8Array([stor[ind][0]])));
+            }).then(x => {
+              bleWriteBusy = false;
+              valWrite[ind] = val; // change memory 
+              charZust[ind] = 0; // switch to no curret task
+              stor[ind].shift(); // delete from storage 
+              if (ismobile()) {
+                return new Promise(resolve => setTimeout(resolve, 100));
+              }
+            }).then(() => {
+              if (stor[ind].length > 0) {
+                // if there are still elements in the storage do it again 
+                this.write(ind);
+              }
             }).catch(error => {
+              bleWriteBusy = false;
               console.log(error);
             });
           }
         } else {
-          charWrite[ind].writeValue(new Uint8Array([stor[ind][0]])).then(x => {
-            //change Input mode
+          waitForBleFree().then(() => {
+            return charWrite[ind].writeValue(new Uint8Array([stor[ind][0]]));
+          }).then(x => {
+            bleWriteBusy = false;
             charZust[ind] = 0;
             valWrite[ind] = val;
             stor[ind].shift();
+            if (ismobile()) {
+              return new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }).then(() => {
             if (stor[ind].length > 0) {
               this.write(ind);
             }
           }).catch(error => {
+            bleWriteBusy = false;
             console.log(error);
           });
         }
       }
     }
   }
-  changeInMode(args) {
+  changeInMode2(args) {
     // Called By Hats to handle wrong input modes
     if (funcstate[parseInt(args.INPUT)] == 0) {
       //function is called for the first time 
@@ -99471,6 +99898,38 @@ class BLEDevice {
         });
       });
     } else {}
+  }
+  changeInMode(args) {
+    // Called by Hats to handle wrong input modes
+    const input = parseInt(args.INPUT);
+    const targetMode = args.TARGET_MODE;
+    if (funcstate[input] == 0) {
+      // function is called for the first time
+      funcstate[input] = 1;
+      charI[input].stopNotifications().then(() => {
+        if (valWrite[input] != targetMode) {
+          return charWrite[input].writeValue(new Uint8Array([targetMode]));
+        } else {
+          return Promise.resolve();
+        }
+      }).then(() => {
+        return charI[input].readValue();
+      }).then(() => {
+        return charI[input].startNotifications();
+      }).then(() => {
+        return charI[input].readValue();
+      }).then(() => {
+        valWrite[input] = targetMode;
+        charZust[input] = 0;
+        changing[input] = false;
+        funcstate[input] = 0;
+        numruns[input] = 0;
+      }).catch(err => {
+        console.error("Error while reading value:", err);
+        funcstate[input] = 0;
+        changing[input] = false;
+      });
+    }
   }
   write_Value(ind, val) {
     // writing handler--> this is the method any block should call
@@ -99539,6 +99998,10 @@ class BLEDevice {
         return connecteddevice.gatt.connect();
       }).then(server => {
         console.log("Connected. Searching for output service ...");
+        if (ismobile()) {
+          console.log("Mobile device detected. Waiting for GATT server to be ready...");
+          return new Promise(resolve => setTimeout(() => resolve(server), 500)).then(server => server.getPrimaryServices());
+        }
         return server.getPrimaryServices();
       }).then(services => {
         console.log("Service found. Requesting characteristic ...");
@@ -99662,6 +100125,8 @@ var numruns = new Array();
 var read = 0;
 var notificationTimer = 0;
 var url;
+const rawstrUSB = __webpack_require__(/*! ./scratchserver_usb.py?raw */ "../scratch-vm/src/extensions/ft_source/scratchserver_usb.py?raw");
+const rawstrWLAN = __webpack_require__(/*! ./scratchserver_wlan.py?raw */ "../scratch-vm/src/extensions/ft_source/scratchserver_wlan.py?raw");
 var connect = undefined;
 class txt40 {
   constructor(runtime) {
@@ -99742,6 +100207,29 @@ class txt40 {
       port: "s" + (ind + 1).toString(),
       val: value
     };
+    return JSON.stringify(string);
+  }
+  getwriteSound(ind, val) {
+    if (ind === 30) {
+      var string = {
+        cmd: "play_sound",
+        val: val,
+        loop: true
+      };
+      console.log(string);
+    } else if (ind === 31) {
+      var string = {
+        cmd: "play_sound",
+        val: val,
+        loop: false
+      };
+      console.log(string);
+    } else if (ind === 32) {
+      var string = {
+        cmd: "stop_sound"
+      };
+      console.log(string);
+    }
     return JSON.stringify(string);
   }
 }
@@ -99830,7 +100318,7 @@ class HttpDevice {
   setnumruns(ind, val) {
     numruns[ind] = val;
   }
-  changeInMode(args) {
+  changeInMode2(args) {
     // Called By Hats to handle wrong input modes
     if (valWrite[parseInt(args.INPUT)] == 0x0b) {
       var val = 0x0a;
@@ -99860,6 +100348,32 @@ class HttpDevice {
       funcstate[parseInt(args.INPUT)] = 0;
       changing[parseInt(args.INPUT)] = false;
       numruns[parseInt(args.INPUT)] = 0;
+    }
+  }
+  changeInMode(args) {
+    const input = parseInt(args.INPUT);
+    const targetMode = args.TARGET_MODE;
+    if (valWrite[input] !== targetMode) {
+      if (funcstate[input] == 0) {
+        read = 0;
+        inputchange[input].push(targetMode);
+        funcstate[input] = 1;
+        list.unshift(input);
+        stor[input].unshift(targetMode);
+        if (charZust == 0) {
+          this.write();
+        }
+      }
+      if (inputchange[input][0] == valWrite[input] && read == 0) {
+        read = 1;
+      }
+      if (read == 2) {
+        read = 0;
+        inputchange[input].shift();
+        funcstate[input] = 0;
+        changing[input] = false;
+        numruns[input] = 0;
+      }
     }
   }
   write() {
@@ -99973,6 +100487,25 @@ class HttpDevice {
               }, 2);
               console.log(error);
             });
+          } else if (ind >= 30) {
+            data = type.getwriteSound(ind, stor[ind][0]);
+            fetch(url + ':8000', {
+              method: 'POST',
+              body: data
+            }).then(x => {
+              charZust = 0;
+              valWrite[ind] = val;
+              list.shift();
+              stor[ind].shift();
+              setTimeout(() => {
+                this.write();
+              }, 2);
+            }).catch(error => {
+              setTimeout(() => {
+                this.write();
+              }, 2);
+              console.log(error);
+            });
           } else {
             data = type.getwriteCounterreset(ind - type.indOut - type.indIn - type.indServo);
             fetch(url + ':8000', {
@@ -100027,6 +100560,9 @@ class HttpDevice {
     } else {
       var res = val;
     }
+    if (!stor[ind]) {
+      stor[ind] = [];
+    }
     if (stor[ind].length < 5) {
       //if the que gets to long (values are added faster than deleted, we only safe the last values )
       list.push(ind);
@@ -100065,16 +100601,19 @@ class HttpDevice {
       }).then(value => {
         if (value == "usb") {
           url = type.usburl;
-          var rawstr = 'from fischertechnik.controller.Motor import Motorxxxx##from lib.controller import *xxxximport fischertechnik.factories as txt_factoryxxxximport jsonxxxxfrom http.server import HTTPServer, BaseHTTPRequestHandlerxxxximport socketserverxxxxHOST = "192.168.7.2"  # txt 4.0xxxx##HOST  = "127.0.0.1"xxxxPORT = 8000  # Port to listen on (non-privileged ports are > 1023)xxxxinputs = [0x0b, 0x0b, 0x0b, 0x0b,0x0b, 0x0b,0x0b, 0x0b]xxxxinput = []xxxxcounter  = []xxxxoutput = []xxxxservo = []xxxxmotors = []xxxxclass NewHTTP(BaseHTTPRequestHandler):xxxx    def do_GET(self):xxxx        self.send_response(200)xxxx        self.send_header("Content-type", "application/json")xxxx        self.send_header("Access-Control-Allow-Origin", "*"),xxxx        self.end_headers()xxxx        ##TXT_M_I1_color_sensor.get_voltage()xxxx        ##result = { "i1":str(TXT_M_I1_mini_switch.get_resistance())}xxxx        result = dict()xxxx        for i in range(8):xxxx            if(inputs[i]==0x0b):xxxx                 result.update({ "i"+str(i+1) : str(input[i].get_resistance())})xxxx            else:xxxx                 result.update({ "i"+str(i+1) : str(input[i].get_voltage())})xxxx        for n in range(4):xxxx            result.update({ "c"+str(n+1) : str(counter[n].get_count())})xxxx        self.wfile.write(bytes(json.dumps(result), "utf-8"))xxxxxxxx    def do_OPTIONS(self):xxxx        self.send_response(200)xxxx        self.send_header("Access-Control-Allow-Origin", "*"),xxxx        self.send_header("Access-Control-Allow-Headers", "*"),xxxx        self.end_headers()xxxxxxxxxxxx    def do_POST(self):xxxx        content_len = int(self.headers.get("Content-Length"))xxxx        post_body = self.rfile.read(content_len)xxxx        self.send_response(200)xxxx        self.send_header("Access-Control-Allow-Origin", "*"),xxxx        self.end_headers()xxxx        post_body = json.loads(post_body.decode("utf-8"))xxxx        if(str(post_body["port"])[0] == "i"):xxxx            self.wfile.write(self.changein(post_body))xxxx        elif(str(post_body["port"])[0] == "c"):xxxx            counter[int(str(post_body["port"])[1])-1].reset()xxxx            self.wfile.write(bytes("ok", "utf-8"))xxxx        elif(str(post_body["port"])[0] == "o"):xxxx            self.wfile.write(self.setout(post_body))xxxx        elif(str(post_body["port"])[0] == "m"):xxxx            self.wfile.write(self.setmotor(post_body))xxxx        elif(str(post_body["port"])[0] == "s"):xxxx            self.wfile.write(self.setservo(post_body))xxxx        else:xxxx            self.wfile.write(bytes("undefined", "utf-8"))xxxxxxxx    def changein(self, post_body):xxxx        try:xxxx            val = post_body["val"]xxxx            if(val == 0x0a):xxxxxxxx                input[int(str(post_body["port"])[1])-1] = txt_factory.input_factory.create_color_sensor(TXT_M, int(str(post_body["port"])[1]))xxxx                inputs[int(str(post_body["port"])[1])-1] = 0x0axxxx                return bytes("ok", "utf-8")xxxx            elif(val == 0x0b):xxxx                input[int(str(post_body["port"])[1])-1] = txt_factory.input_factory.create_photo_resistor(TXT_M, int(str(post_body["port"])[1]))xxxx                inputs[int(str(post_body["port"])[1])-1] = 0x0bxxxx                return bytes("ok", "utf-8")xxxx            else:xxxx                return bytes("mode not defined", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:"+str(e), "utf-8")xxxxxxxx    def setout(self, post_body):xxxx        try:xxxx            val = int(str(post_body["val"]))xxxx            output[int(str(post_body["port"])[1])-1].set_brightness(val)xxxx            return bytes("ok", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:"+str(e), "utf-8")xxxxxxxx    def setmotor(self, post_body):xxxx        #try:xxxx        #     val = int(str(post_body["val"]))xxxx        #     if(val>0):xxxx        #          output[int(str(post_body["port"])[1])].set_brightness(0)xxxx        #          output[int(str(post_body["port"])[1])-1].set_brightness(val)xxxx        #     else:xxxx        #          output[int(str(post_body["port"])[1])].set_brightness(val*(-1))xxxx        #          output[int(str(post_body["port"])[1])-1].set_brightness(0)xxxx        #     return bytes("ok", "utf-8")xxxx        #except Exception as e:xxxx        #     return bytes("error:"+str(e), "utf-8")xxxx        #xxxx        try:xxxx            val = int(str(post_body["val"]))xxxx            motor_index = int(str(post_body["port"])[1]) - 1xxxxxxxx            # Steuerung der Motoren basierend auf der Portnummerxxxx            motor = motors[motor_index]xxxxxxxx            if val > 0:xxxx                motor.set_speed(val, Motor.CW)  # Uhrzeigersinnxxxx                motor.start()xxxx            elif val < 0:xxxx                motor.set_speed(abs(val), Motor.CCW)  # Gegen den Uhrzeigersinnxxxx                motor.start()xxxx            else:xxxx                motor.stop()xxxxxxxx            return bytes("ok", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:" + str(e), "utf-8")xxxxxxxx    def setservo(self, post_body):xxxx        try:xxxx            val = int(str(post_body["val"]))xxxx            servo[int(str(post_body["port"])[1])-1].set_position(val)xxxx            return bytes("ok", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:"+str(e), "utf-8")xxxxxxxxserver = HTTPServer((HOST, PORT ), NewHTTP) ##server is startedxxxxtxt_factory.init()xxxxtxt_factory.init_input_factory()xxxxtxt_factory.init_motor_factory()xxxxtxt_factory.init_counter_factory()xxxxtxt_factory.init_usb_factory()xxxxtxt_factory.init_camera_factory()xxxxtxt_factory.init_output_factory()xxxxtxt_factory.init_servomotor_factory()xxxxtxt_factory.init_i2c_factory()xxxxxxxxxxxxTXT_M = txt_factory.controller_factory.create_graphical_controller()xxxxfor x in range (8):xxxx    input.append(txt_factory.input_factory.create_photo_resistor(TXT_M, x+1))xxxxfor x in range (4):xxxx    counter.append(txt_factory.counter_factory.create_mini_switch_counter(TXT_M, x+1))xxxxfor x in range (8):xxxx    output.append(txt_factory.output_factory.create_led(TXT_M, x+1))xxxxfor x in range(3):xxxx    servo.append(txt_factory.servomotor_factory.create_servomotor(TXT_M, x+1))xxxxxxxxfor x in range(4):xxxx    motors.append(txt_factory.motor_factory.create_motor(TXT_M, x+1))xxxxxxxxtxt_factory.initialized()xxxxserver.serve_forever() ##runs infinitely';
+          var rawstr = rawstrUSB;
+          //var rawstr = 'from fischertechnik.controller.Motor import Motorxxxx##from lib.controller import *xxxximport fischertechnik.factories as txt_factoryxxxximport jsonxxxxfrom http.server import HTTPServer, BaseHTTPRequestHandlerxxxximport socketserverxxxxHOST = "192.168.7.2"  # txt 4.0xxxx##HOST  = "127.0.0.1"xxxxPORT = 8000  # Port to listen on (non-privileged ports are > 1023)xxxxinputs = [0x0b, 0x0b, 0x0b, 0x0b,0x0b, 0x0b,0x0b, 0x0b]xxxxinput = []xxxxcounter  = []xxxxoutput = []xxxxservo = []xxxxmotors = []xxxxclass NewHTTP(BaseHTTPRequestHandler):xxxx    def do_GET(self):xxxx        self.send_response(200)xxxx        self.send_header("Content-type", "application/json")xxxx        self.send_header("Access-Control-Allow-Origin", "*"),xxxx        self.end_headers()xxxx        ##TXT_M_I1_color_sensor.get_voltage()xxxx        ##result = { "i1":str(TXT_M_I1_mini_switch.get_resistance())}xxxx        result = dict()xxxx        for i in range(8):xxxx            if(inputs[i]==0x0b):xxxx                 result.update({ "i"+str(i+1) : str(input[i].get_resistance())})xxxx            else:xxxx                 result.update({ "i"+str(i+1) : str(input[i].get_voltage())})xxxx        for n in range(4):xxxx            result.update({ "c"+str(n+1) : str(counter[n].get_count())})xxxx        self.wfile.write(bytes(json.dumps(result), "utf-8"))xxxxxxxx    def do_OPTIONS(self):xxxx        self.send_response(200)xxxx        self.send_header("Access-Control-Allow-Origin", "*"),xxxx        self.send_header("Access-Control-Allow-Headers", "*"),xxxx        self.end_headers()xxxxxxxxxxxx    def do_POST(self):xxxx        content_len = int(self.headers.get("Content-Length"))xxxx        post_body = self.rfile.read(content_len)xxxx        self.send_response(200)xxxx        self.send_header("Access-Control-Allow-Origin", "*"),xxxx        self.end_headers()xxxx        post_body = json.loads(post_body.decode("utf-8"))xxxx        if(str(post_body["port"])[0] == "i"):xxxx            self.wfile.write(self.changein(post_body))xxxx        elif(str(post_body["port"])[0] == "c"):xxxx            counter[int(str(post_body["port"])[1])-1].reset()xxxx            self.wfile.write(bytes("ok", "utf-8"))xxxx        elif(str(post_body["port"])[0] == "o"):xxxx            self.wfile.write(self.setout(post_body))xxxx        elif(str(post_body["port"])[0] == "m"):xxxx            self.wfile.write(self.setmotor(post_body))xxxx        elif(str(post_body["port"])[0] == "s"):xxxx            self.wfile.write(self.setservo(post_body))xxxx        else:xxxx            self.wfile.write(bytes("undefined", "utf-8"))xxxxxxxx    def changein(self, post_body):xxxx        try:xxxx            val = post_body["val"]xxxx            if(val == 0x0a):xxxxxxxx                input[int(str(post_body["port"])[1])-1] = txt_factory.input_factory.create_color_sensor(TXT_M, int(str(post_body["port"])[1]))xxxx                inputs[int(str(post_body["port"])[1])-1] = 0x0axxxx                return bytes("ok", "utf-8")xxxx            elif(val == 0x0b):xxxx                input[int(str(post_body["port"])[1])-1] = txt_factory.input_factory.create_photo_resistor(TXT_M, int(str(post_body["port"])[1]))xxxx                inputs[int(str(post_body["port"])[1])-1] = 0x0bxxxx                return bytes("ok", "utf-8")xxxx            else:xxxx                return bytes("mode not defined", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:"+str(e), "utf-8")xxxxxxxx    def setout(self, post_body):xxxx        try:xxxx            val = int(str(post_body["val"]))xxxx            output[int(str(post_body["port"])[1])-1].set_brightness(val)xxxx            return bytes("ok", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:"+str(e), "utf-8")xxxxxxxx    def setmotor(self, post_body):xxxx        #try:xxxx        #     val = int(str(post_body["val"]))xxxx        #     if(val>0):xxxx        #          output[int(str(post_body["port"])[1])].set_brightness(0)xxxx        #          output[int(str(post_body["port"])[1])-1].set_brightness(val)xxxx        #     else:xxxx        #          output[int(str(post_body["port"])[1])].set_brightness(val*(-1))xxxx        #          output[int(str(post_body["port"])[1])-1].set_brightness(0)xxxx        #     return bytes("ok", "utf-8")xxxx        #except Exception as e:xxxx        #     return bytes("error:"+str(e), "utf-8")xxxx        #xxxx        try:xxxx            val = int(str(post_body["val"]))xxxx            motor_index = int(str(post_body["port"])[1]) - 1xxxxxxxx            # Steuerung der Motoren basierend auf der Portnummerxxxx            motor = motors[motor_index]xxxxxxxx            if val > 0:xxxx                motor.set_speed(val, Motor.CW)  # Uhrzeigersinnxxxx                motor.start()xxxx            elif val < 0:xxxx                motor.set_speed(abs(val), Motor.CCW)  # Gegen den Uhrzeigersinnxxxx                motor.start()xxxx            else:xxxx                motor.stop()xxxxxxxx            return bytes("ok", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:" + str(e), "utf-8")xxxxxxxx    def setservo(self, post_body):xxxx        try:xxxx            val = int(str(post_body["val"]))xxxx            servo[int(str(post_body["port"])[1])-1].set_position(val)xxxx            return bytes("ok", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:"+str(e), "utf-8")xxxxxxxxserver = HTTPServer((HOST, PORT ), NewHTTP) ##server is startedxxxxtxt_factory.init()xxxxtxt_factory.init_input_factory()xxxxtxt_factory.init_motor_factory()xxxxtxt_factory.init_counter_factory()xxxxtxt_factory.init_usb_factory()xxxxtxt_factory.init_camera_factory()xxxxtxt_factory.init_output_factory()xxxxtxt_factory.init_servomotor_factory()xxxxtxt_factory.init_i2c_factory()xxxxxxxxxxxxTXT_M = txt_factory.controller_factory.create_graphical_controller()xxxxfor x in range (8):xxxx    input.append(txt_factory.input_factory.create_photo_resistor(TXT_M, x+1))xxxxfor x in range (4):xxxx    counter.append(txt_factory.counter_factory.create_mini_switch_counter(TXT_M, x+1))xxxxfor x in range (8):xxxx    output.append(txt_factory.output_factory.create_led(TXT_M, x+1))xxxxfor x in range(3):xxxx    servo.append(txt_factory.servomotor_factory.create_servomotor(TXT_M, x+1))xxxxxxxxfor x in range(4):xxxx    motors.append(txt_factory.motor_factory.create_motor(TXT_M, x+1))xxxxxxxxtxt_factory.initialized()xxxxserver.serve_forever() ##runs infinitely'
         } else if (value == "wlan") {
           url = type.wlanurl;
-          var rawstr = 'from fischertechnik.controller.Motor import Motorxxxx##from lib.controller import *xxxximport fischertechnik.factories as txt_factoryxxxximport jsonxxxxfrom http.server import HTTPServer, BaseHTTPRequestHandlerxxxximport socketserverxxxxHOST = "192.168.8.2"  # txt 4.0xxxx##HOST  = "127.0.0.1"xxxxPORT = 8000  # Port to listen on (non-privileged ports are > 1023)xxxxinputs = [0x0b, 0x0b, 0x0b, 0x0b,0x0b, 0x0b,0x0b, 0x0b]xxxxinput = []xxxxcounter  = []xxxxoutput = []xxxxservo = []xxxxmotors = []xxxxclass NewHTTP(BaseHTTPRequestHandler):xxxx    def do_GET(self):xxxx        self.send_response(200)xxxx        self.send_header("Content-type", "application/json")xxxx        self.send_header("Access-Control-Allow-Origin", "*"),xxxx        self.end_headers()xxxx        ##TXT_M_I1_color_sensor.get_voltage()xxxx        ##result = { "i1":str(TXT_M_I1_mini_switch.get_resistance())}xxxx        result = dict()xxxx        for i in range(8):xxxx            if(inputs[i]==0x0b):xxxx                 result.update({ "i"+str(i+1) : str(input[i].get_resistance())})xxxx            else:xxxx                 result.update({ "i"+str(i+1) : str(input[i].get_voltage())})xxxx        for n in range(4):xxxx            result.update({ "c"+str(n+1) : str(counter[n].get_count())})xxxx        self.wfile.write(bytes(json.dumps(result), "utf-8"))xxxxxxxx    def do_OPTIONS(self):xxxx        self.send_response(200)xxxx        self.send_header("Access-Control-Allow-Origin", "*"),xxxx        self.send_header("Access-Control-Allow-Headers", "*"),xxxx        self.end_headers()xxxxxxxxxxxx    def do_POST(self):xxxx        content_len = int(self.headers.get("Content-Length"))xxxx        post_body = self.rfile.read(content_len)xxxx        self.send_response(200)xxxx        self.send_header("Access-Control-Allow-Origin", "*"),xxxx        self.end_headers()xxxx        post_body = json.loads(post_body.decode("utf-8"))xxxx        if(str(post_body["port"])[0] == "i"):xxxx            self.wfile.write(self.changein(post_body))xxxx        elif(str(post_body["port"])[0] == "c"):xxxx            counter[int(str(post_body["port"])[1])-1].reset()xxxx            self.wfile.write(bytes("ok", "utf-8"))xxxx        elif(str(post_body["port"])[0] == "o"):xxxx            self.wfile.write(self.setout(post_body))xxxx        elif(str(post_body["port"])[0] == "m"):xxxx            self.wfile.write(self.setmotor(post_body))xxxx        elif(str(post_body["port"])[0] == "s"):xxxx            self.wfile.write(self.setservo(post_body))xxxx        else:xxxx            self.wfile.write(bytes("undefined", "utf-8"))xxxxxxxx    def changein(self, post_body):xxxx        try:xxxx            val = post_body["val"]xxxx            if(val == 0x0a):xxxxxxxx                input[int(str(post_body["port"])[1])-1] = txt_factory.input_factory.create_color_sensor(TXT_M, int(str(post_body["port"])[1]))xxxx                inputs[int(str(post_body["port"])[1])-1] = 0x0axxxx                return bytes("ok", "utf-8")xxxx            elif(val == 0x0b):xxxx                input[int(str(post_body["port"])[1])-1] = txt_factory.input_factory.create_photo_resistor(TXT_M, int(str(post_body["port"])[1]))xxxx                inputs[int(str(post_body["port"])[1])-1] = 0x0bxxxx                return bytes("ok", "utf-8")xxxx            else:xxxx                return bytes("mode not defined", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:"+str(e), "utf-8")xxxxxxxx    def setout(self, post_body):xxxx        try:xxxx            val = int(str(post_body["val"]))xxxx            output[int(str(post_body["port"])[1])-1].set_brightness(val)xxxx            return bytes("ok", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:"+str(e), "utf-8")xxxxxxxx    def setmotor(self, post_body):xxxx        #try:xxxx        #     val = int(str(post_body["val"]))xxxx        #     if(val>0):xxxx        #          output[int(str(post_body["port"])[1])].set_brightness(0)xxxx        #          output[int(str(post_body["port"])[1])-1].set_brightness(val)xxxx        #     else:xxxx        #          output[int(str(post_body["port"])[1])].set_brightness(val*(-1))xxxx        #          output[int(str(post_body["port"])[1])-1].set_brightness(0)xxxx        #     return bytes("ok", "utf-8")xxxx        #except Exception as e:xxxx        #     return bytes("error:"+str(e), "utf-8")xxxx        #xxxx        try:xxxx            val = int(str(post_body["val"]))xxxx            motor_index = int(str(post_body["port"])[1]) - 1xxxxxxxx            # Steuerung der Motoren basierend auf der Portnummerxxxx            motor = motors[motor_index]xxxxxxxx            if val > 0:xxxx                motor.set_speed(val, Motor.CW)  # Uhrzeigersinnxxxx                motor.start()xxxx            elif val < 0:xxxx                motor.set_speed(abs(val), Motor.CCW)  # Gegen den Uhrzeigersinnxxxx                motor.start()xxxx            else:xxxx                motor.stop()xxxxxxxx            return bytes("ok", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:" + str(e), "utf-8")xxxxxxxx    def setservo(self, post_body):xxxx        try:xxxx            val = int(str(post_body["val"]))xxxx            servo[int(str(post_body["port"])[1])-1].set_position(val)xxxx            return bytes("ok", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:"+str(e), "utf-8")xxxxxxxxserver = HTTPServer((HOST, PORT ), NewHTTP) ##server is startedxxxxtxt_factory.init()xxxxtxt_factory.init_input_factory()xxxxtxt_factory.init_motor_factory()xxxxtxt_factory.init_counter_factory()xxxxtxt_factory.init_usb_factory()xxxxtxt_factory.init_camera_factory()xxxxtxt_factory.init_output_factory()xxxxtxt_factory.init_servomotor_factory()xxxxtxt_factory.init_i2c_factory()xxxxxxxxxxxxTXT_M = txt_factory.controller_factory.create_graphical_controller()xxxxfor x in range (8):xxxx    input.append(txt_factory.input_factory.create_photo_resistor(TXT_M, x+1))xxxxfor x in range (4):xxxx    counter.append(txt_factory.counter_factory.create_mini_switch_counter(TXT_M, x+1))xxxxfor x in range (8):xxxx    output.append(txt_factory.output_factory.create_led(TXT_M, x+1))xxxxfor x in range(3):xxxx    servo.append(txt_factory.servomotor_factory.create_servomotor(TXT_M, x+1))xxxxxxxxfor x in range(4):xxxx    motors.append(txt_factory.motor_factory.create_motor(TXT_M, x+1))xxxxxxxxtxt_factory.initialized()xxxxserver.serve_forever() ##runs infinitely';
+          var rawstr = rawstrWLAN;
+          //var rawstr = 'from fischertechnik.controller.Motor import Motorxxxx##from lib.controller import *xxxximport fischertechnik.factories as txt_factoryxxxximport jsonxxxxfrom http.server import HTTPServer, BaseHTTPRequestHandlerxxxximport socketserverxxxxHOST = "192.168.8.2"  # txt 4.0xxxx##HOST  = "127.0.0.1"xxxxPORT = 8000  # Port to listen on (non-privileged ports are > 1023)xxxxinputs = [0x0b, 0x0b, 0x0b, 0x0b,0x0b, 0x0b,0x0b, 0x0b]xxxxinput = []xxxxcounter  = []xxxxoutput = []xxxxservo = []xxxxmotors = []xxxxclass NewHTTP(BaseHTTPRequestHandler):xxxx    def do_GET(self):xxxx        self.send_response(200)xxxx        self.send_header("Content-type", "application/json")xxxx        self.send_header("Access-Control-Allow-Origin", "*"),xxxx        self.end_headers()xxxx        ##TXT_M_I1_color_sensor.get_voltage()xxxx        ##result = { "i1":str(TXT_M_I1_mini_switch.get_resistance())}xxxx        result = dict()xxxx        for i in range(8):xxxx            if(inputs[i]==0x0b):xxxx                 result.update({ "i"+str(i+1) : str(input[i].get_resistance())})xxxx            else:xxxx                 result.update({ "i"+str(i+1) : str(input[i].get_voltage())})xxxx        for n in range(4):xxxx            result.update({ "c"+str(n+1) : str(counter[n].get_count())})xxxx        self.wfile.write(bytes(json.dumps(result), "utf-8"))xxxxxxxx    def do_OPTIONS(self):xxxx        self.send_response(200)xxxx        self.send_header("Access-Control-Allow-Origin", "*"),xxxx        self.send_header("Access-Control-Allow-Headers", "*"),xxxx        self.end_headers()xxxxxxxxxxxx    def do_POST(self):xxxx        content_len = int(self.headers.get("Content-Length"))xxxx        post_body = self.rfile.read(content_len)xxxx        self.send_response(200)xxxx        self.send_header("Access-Control-Allow-Origin", "*"),xxxx        self.end_headers()xxxx        post_body = json.loads(post_body.decode("utf-8"))xxxx        if(str(post_body["port"])[0] == "i"):xxxx            self.wfile.write(self.changein(post_body))xxxx        elif(str(post_body["port"])[0] == "c"):xxxx            counter[int(str(post_body["port"])[1])-1].reset()xxxx            self.wfile.write(bytes("ok", "utf-8"))xxxx        elif(str(post_body["port"])[0] == "o"):xxxx            self.wfile.write(self.setout(post_body))xxxx        elif(str(post_body["port"])[0] == "m"):xxxx            self.wfile.write(self.setmotor(post_body))xxxx        elif(str(post_body["port"])[0] == "s"):xxxx            self.wfile.write(self.setservo(post_body))xxxx        else:xxxx            self.wfile.write(bytes("undefined", "utf-8"))xxxxxxxx    def changein(self, post_body):xxxx        try:xxxx            val = post_body["val"]xxxx            if(val == 0x0a):xxxxxxxx                input[int(str(post_body["port"])[1])-1] = txt_factory.input_factory.create_color_sensor(TXT_M, int(str(post_body["port"])[1]))xxxx                inputs[int(str(post_body["port"])[1])-1] = 0x0axxxx                return bytes("ok", "utf-8")xxxx            elif(val == 0x0b):xxxx                input[int(str(post_body["port"])[1])-1] = txt_factory.input_factory.create_photo_resistor(TXT_M, int(str(post_body["port"])[1]))xxxx                inputs[int(str(post_body["port"])[1])-1] = 0x0bxxxx                return bytes("ok", "utf-8")xxxx            else:xxxx                return bytes("mode not defined", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:"+str(e), "utf-8")xxxxxxxx    def setout(self, post_body):xxxx        try:xxxx            val = int(str(post_body["val"]))xxxx            output[int(str(post_body["port"])[1])-1].set_brightness(val)xxxx            return bytes("ok", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:"+str(e), "utf-8")xxxxxxxx    def setmotor(self, post_body):xxxx        #try:xxxx        #     val = int(str(post_body["val"]))xxxx        #     if(val>0):xxxx        #          output[int(str(post_body["port"])[1])].set_brightness(0)xxxx        #          output[int(str(post_body["port"])[1])-1].set_brightness(val)xxxx        #     else:xxxx        #          output[int(str(post_body["port"])[1])].set_brightness(val*(-1))xxxx        #          output[int(str(post_body["port"])[1])-1].set_brightness(0)xxxx        #     return bytes("ok", "utf-8")xxxx        #except Exception as e:xxxx        #     return bytes("error:"+str(e), "utf-8")xxxx        #xxxx        try:xxxx            val = int(str(post_body["val"]))xxxx            motor_index = int(str(post_body["port"])[1]) - 1xxxxxxxx            # Steuerung der Motoren basierend auf der Portnummerxxxx            motor = motors[motor_index]xxxxxxxx            if val > 0:xxxx                motor.set_speed(val, Motor.CW)  # Uhrzeigersinnxxxx                motor.start()xxxx            elif val < 0:xxxx                motor.set_speed(abs(val), Motor.CCW)  # Gegen den Uhrzeigersinnxxxx                motor.start()xxxx            else:xxxx                motor.stop()xxxxxxxx            return bytes("ok", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:" + str(e), "utf-8")xxxxxxxx    def setservo(self, post_body):xxxx        try:xxxx            val = int(str(post_body["val"]))xxxx            servo[int(str(post_body["port"])[1])-1].set_position(val)xxxx            return bytes("ok", "utf-8")xxxx        except Exception as e:xxxx            return bytes("error:"+str(e), "utf-8")xxxxxxxxserver = HTTPServer((HOST, PORT ), NewHTTP) ##server is startedxxxxtxt_factory.init()xxxxtxt_factory.init_input_factory()xxxxtxt_factory.init_motor_factory()xxxxtxt_factory.init_counter_factory()xxxxtxt_factory.init_usb_factory()xxxxtxt_factory.init_camera_factory()xxxxtxt_factory.init_output_factory()xxxxtxt_factory.init_servomotor_factory()xxxxtxt_factory.init_i2c_factory()xxxxxxxxxxxxTXT_M = txt_factory.controller_factory.create_graphical_controller()xxxxfor x in range (8):xxxx    input.append(txt_factory.input_factory.create_photo_resistor(TXT_M, x+1))xxxxfor x in range (4):xxxx    counter.append(txt_factory.counter_factory.create_mini_switch_counter(TXT_M, x+1))xxxxfor x in range (8):xxxx    output.append(txt_factory.output_factory.create_led(TXT_M, x+1))xxxxfor x in range(3):xxxx    servo.append(txt_factory.servomotor_factory.create_servomotor(TXT_M, x+1))xxxxxxxxfor x in range(4):xxxx    motors.append(txt_factory.motor_factory.create_motor(TXT_M, x+1))xxxxxxxxtxt_factory.initialized()xxxxserver.serve_forever() ##runs infinitely'
         } else {
           throw "cancelled";
         }
-        var str = rawstr.replace(/xxxx/g, "\n"); // python file written as one line string is now formatted
 
-        let scratchserver = new File([str], "/scratchserver.py");
+        //var str = rawstr.replace(/xxxx/g, "\n") // python file written as one line string is now formatted
+
+        let scratchserver = new File([rawstr], "/scratchserver.py");
         formData.append('files', scratchserver, '/scratchserver.py'); // file is added to form data object which will be send to the TXT4.0
 
         let controllerfile = new File([''], "lib/controller.py", {});
@@ -100542,7 +101081,7 @@ class Main {
         }
       });
     }
-    this.versionNumber = "0.1.9";
+    this.versionNumber = "0.1.10";
   }
   ismobile() {
     const isTabletDevice = isTablet();
@@ -101252,6 +101791,23 @@ class Menus {
     less.value = '<';
     return compares;
   }
+  soundfiles() {
+    const files = ['01_Airplane', '02_Alarm', '03_Bell', '04_Braking', '05_Car_horn_long', '06_Car_horn_short', '07_Crackling_wood', '08_Excavator', '09_Fantasy_1', '10_Fantasy_2', '11_Fantasy_3', '12_Fantasy_4', '13_Farm', '14_Fire_department', '15_Fire_noises', '16_Formula1', '17_Helicopter', '18_Hydraulic', '19_Motor_sound', '20_Motor_starting', '21_Propeller_airplane', '22_Roller_coaster', '23_Ships_horn', '24_Tractor', '25_Truck', '26_Augenzwinkern', '27_Fahrgeraeusch', '28_Kopf_heben', '29_Kopf_neigen'];
+    return files.map(filename => ({
+      text: filename + '.wav',
+      value: filename + '.wav'
+    }));
+  }
+  LOOP() {
+    const yes = {};
+    const no = {};
+    const loop = [yes, no];
+    yes.text = translate._getText('yes');
+    yes.value = 'yes';
+    no.text = translate._getText('no');
+    no.value = 'no';
+    return loop;
+  }
 }
 module.exports = Menus;
 
@@ -101264,6 +101820,9 @@ module.exports = Menus;
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 const formatMessage = __webpack_require__(/*! format-message */ "../scratch-vm/node_modules/format-message/index.js");
+const {
+  LOOP
+} = __webpack_require__(/*! ../../extension-support/block-type */ "../scratch-vm/src/extension-support/block-type.js");
 const message = {
   // translations en/ger
   Digitalvoltage: {
@@ -101338,6 +101897,14 @@ const message = {
     'en': 'backwards',
     'de': 'Rückwärts'
   },
+  yes: {
+    'en': 'yes',
+    'de': 'ja'
+  },
+  no: {
+    'en': 'no',
+    'de': 'nein'
+  },
   onOpenClose: {
     'en': 'If [SENSOR] [INPUT] [OPENCLOSE]',
     'de': 'Wenn [SENSOR] [INPUT] [OPENCLOSE]'
@@ -101405,6 +101972,14 @@ const message = {
   doPlaySoundWait: {
     'en': 'Play sound [NUM] and wait',
     'de': 'Spiele Sound [NUM] und warte'
+  },
+  doPlaySound2: {
+    'en': 'Play sound [SOUND_ID] Loop [LOOP]',
+    'de': 'Spiele Sound [SOUND_ID] Wiederholen [LOOP]'
+  },
+  doStopSound: {
+    'en': 'Stop sound',
+    'de': 'Stoppe Sound'
   },
   doResetCounter: {
     'en': 'Reset counter [COUNTER_ID]',
@@ -101860,7 +102435,7 @@ class USBDevice {
   getvalIn(ind) {
     return valIn[ind];
   }
-  changeInMode(args) {
+  changeInMode2(args) {
     // Called By Hats to handle wrong input modes
     if (valWrite[parseInt(args.INPUT)] == 0x0b) {
       var val = 0x0a;
@@ -101889,6 +102464,32 @@ class USBDevice {
       funcstate[parseInt(args.INPUT)] = 0;
       changing[parseInt(args.INPUT)] = false;
       numruns[parseInt(args.INPUT)] = 0;
+    }
+  }
+  changeInMode(args) {
+    const input = parseInt(args.INPUT);
+    const targetMode = args.TARGET_MODE;
+    if (valWrite[input] !== targetMode) {
+      if (funcstate[input] == 0) {
+        read = 0;
+        inputchange[input].push(targetMode);
+        funcstate[input] = 1;
+        list.unshift(input);
+        stor[input].unshift(targetMode);
+        if (charZust == 0) {
+          this.write();
+        }
+      }
+      if (inputchange[input][0] == valWrite[input] && read == 0) {
+        read = 1;
+      }
+      if (read == 2) {
+        read = 0;
+        inputchange[input].shift();
+        funcstate[input] = 0;
+        changing[input] = false;
+        numruns[input] = 0;
+      }
     }
   }
   write() {
@@ -102585,11 +103186,13 @@ class ftduino {
       }
     }));
     valWrite[ind + this.indOut] = val === "resistance" ? 0x0b : 0x0a;
-    read = 0;
-    inputchange[ind + this.indOut].shift();
-    funcstate[ind + this.indOut] = 0;
-    changing[ind + this.indOut] = false;
-    numruns[ind + this.indOut] = 0;
+
+    //read=0
+    //inputchange[ind + this.indOut].shift();
+    //funcstate[ind + this.indOut]=0;
+    //changing[ind + this.indOut] = false;
+    //numruns[ind + this.indOut]=0;
+
     return data;
   }
   getwriteCounterreset(ind) {
@@ -102794,7 +103397,7 @@ class WebUSBDevice {
   setnumruns(ind, val) {
     numruns[ind] = val;
   }
-  changeInMode(args) {
+  changeInMode2(args) {
     // Called By Hats to handle wrong input modes
     if (valWrite[parseInt(args.INPUT)] == 0x0b) {
       var val = 0x0a;
@@ -102823,6 +103426,32 @@ class WebUSBDevice {
       funcstate[parseInt(args.INPUT)] = 0;
       changing[parseInt(args.INPUT)] = false;
       numruns[parseInt(args.INPUT)] = 0;
+    }
+  }
+  changeInMode(args) {
+    const input = parseInt(args.INPUT);
+    const targetMode = args.TARGET_MODE;
+    if (valWrite[input] !== targetMode) {
+      if (funcstate[input] == 0) {
+        read = 0;
+        inputchange[input].push(targetMode);
+        funcstate[input] = 1;
+        list.unshift(input);
+        stor[input].unshift(targetMode);
+        if (charZust == 0) {
+          this.write();
+        }
+      }
+      if (inputchange[input][0] == valWrite[input] && read == 0) {
+        read = 1;
+      }
+      if (read == 2) {
+        read = 0;
+        inputchange[input].shift();
+        funcstate[input] = 0;
+        changing[input] = false;
+        numruns[input] = 0;
+      }
     }
   }
   write() {
@@ -113795,6 +114424,9 @@ module.exports = Scratch3TXBlocks;
   Currently only English and German translations are available.
 
 */
+const {
+  LOOP
+} = __webpack_require__(/*! ../../extension-support/block-type.js */ "../scratch-vm/src/extension-support/block-type.js");
 const Block = __webpack_require__(/*! ../ft_source/block */ "../scratch-vm/src/extensions/ft_source/block.js");
 const Main = __webpack_require__(/*! ../ft_source/index.js */ "../scratch-vm/src/extensions/ft_source/index.js");
 const Menus = __webpack_require__(/*! ../ft_source/menus.js */ "../scratch-vm/src/extensions/ft_source/menus.js");
@@ -113863,7 +114495,10 @@ class Scratch3TXT40Blocks {
       docsURI: 'https://technika-karlsruhe.github.io/',
       blocks: [
       //the blocks are already defined in the block.js file and accessed like that:
-      b.getBlock_onOpenClose(), b.getBlock_onCounter(), b.getBlock_onInput2(), b.getBlock_getCounter(), b.getBlock_getSensor2(), b.getBlock_isClosed(), b.getBlock_doPlaySound(), b.getBlock_doPlaySoundWait(), b.getBlock_doSetLamp2(), b.getBlock_doSetOutput2(), b.getBlock_doResetCounter(), b.getBlock_doConfigureInput2(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor(), b.getBlock_doSetMotorSpeedDirDist(), b.getBlock_doSetMotorSpeedDirSync(), b.getBlock_doSetMotorSpeedDirDistSync(), b.getBlock_doStopMotorAndReset(), b.getBlock_doSetServoPosition()],
+      b.getBlock_onOpenClose(), b.getBlock_onCounter(), b.getBlock_onInput2(), b.getBlock_getCounter(), b.getBlock_getSensor2(), b.getBlock_isClosed(),
+      //b.getBlock_doPlaySound(),
+      //b.getBlock_doPlaySoundWait(),
+      b.getBlock_doPlaySound2(), b.getBlock_doStopSound(), b.getBlock_doSetLamp2(), b.getBlock_doSetOutput2(), b.getBlock_doResetCounter(), b.getBlock_doConfigureInput2(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor(), b.getBlock_doSetMotorSpeedDirDist(), b.getBlock_doSetMotorSpeedDirSync(), b.getBlock_doSetMotorSpeedDirDistSync(), b.getBlock_doStopMotorAndReset(), b.getBlock_doSetServoPosition()],
       menus: {
         // defining the different Menus, identified by the blocks through their name
         counterID: {
@@ -113898,6 +114533,12 @@ class Scratch3TXT40Blocks {
         },
         compares: {
           items: m.compares()
+        },
+        soundfiles: {
+          items: m.soundfiles()
+        },
+        LOOP: {
+          items: m.LOOP()
         }
       }
     };
@@ -113953,6 +114594,12 @@ class Scratch3TXT40Blocks {
   doPlaySoundWait(args) {
     // SOUND_ID
     b.doPlaySoundWait(args, controller);
+  }
+  doPlaySound2(args) {
+    b.doPlaySound2(args, controller);
+  }
+  doStopSound(args) {
+    b.doStopSound(args, controller);
   }
   doResetCounter(args) {
     // COUNTER_ID
@@ -413622,6 +414269,28 @@ function version(uuid) {
 }
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (version);
+
+/***/ }),
+
+/***/ "../scratch-vm/src/extensions/ft_source/scratchserver_usb.py?raw":
+/*!***********************************************************************!*\
+  !*** ../scratch-vm/src/extensions/ft_source/scratchserver_usb.py?raw ***!
+  \***********************************************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "from fischertechnik.controller.Motor import Motor\r\nimport fischertechnik.factories as txt_factory\r\nimport json\r\nfrom http.server import HTTPServer, BaseHTTPRequestHandler\r\nimport socketserver\r\nHOST = \"192.168.7.2\"  # txt 4.0\r\nPORT = 8000  # Port to listen on (non-privileged ports are > 1023)\r\ninputs = [0x0b, 0x0b, 0x0b, 0x0b,0x0b, 0x0b,0x0b, 0x0b]\r\ninput = []\r\ncounter  = []\r\noutput = []\r\nservo = []\r\nmotors = []\r\nclass NewHTTP(BaseHTTPRequestHandler):\r\n    def do_GET(self):\r\n        self.send_response(200)\r\n        self.send_header(\"Content-type\", \"application/json\")\r\n        self.send_header(\"Access-Control-Allow-Origin\", \"*\"),\r\n        self.end_headers()\r\n        ##TXT_M_I1_color_sensor.get_voltage()\r\n        ##result = { \"i1\":str(TXT_M_I1_mini_switch.get_resistance())}\r\n        result = dict()\r\n        for i in range(8):\r\n            if(inputs[i] == 0x0b):\r\n                result.update({ \"i\"+str(i+1) : str(input[i].get_resistance())})\r\n            elif(inputs[i] == 0x0a):\r\n                result.update({ \"i\"+str(i+1) : str(input[i].get_voltage())})\r\n            elif(inputs[i] == 0x0c):\r\n                result.update({ \"i\"+str(i+1) : str(input[i].get_distance())})\r\n        for n in range(4):\r\n            result.update({ \"c\"+str(n+1) : str(counter[n].get_count())})\r\n        self.wfile.write(bytes(json.dumps(result), \"utf-8\"))\r\n\r\n    def do_OPTIONS(self):\r\n        self.send_response(200)\r\n        self.send_header(\"Access-Control-Allow-Origin\", \"*\"),\r\n        self.send_header(\"Access-Control-Allow-Headers\", \"*\"),\r\n        self.end_headers()\r\n\r\n\r\n    def do_POST(self):\r\n        content_len = int(self.headers.get(\"Content-Length\"))\r\n        post_body = self.rfile.read(content_len)\r\n        self.send_response(200)\r\n        self.send_header(\"Access-Control-Allow-Origin\", \"*\"),\r\n        self.end_headers()\r\n        post_body = json.loads(post_body.decode(\"utf-8\"))\r\n\r\n        if \"cmd\" in post_body:\r\n            if post_body[\"cmd\"] == \"play_sound\":\r\n                \r\n                TXT_M.get_loudspeaker().play(post_body[\"val\"], post_body[\"loop\"])\r\n                self.wfile.write(bytes(\"ok\", \"utf-8\"))\r\n\r\n            elif post_body[\"cmd\"] == \"stop_sound\":\r\n                    \r\n                TXT_M.get_loudspeaker().stop()\r\n                self.wfile.write(bytes(\"ok\", \"utf-8\"))\r\n\r\n        if(str(post_body[\"port\"])[0] == \"i\"):\r\n            self.wfile.write(self.changein(post_body))\r\n        elif(str(post_body[\"port\"])[0] == \"c\"):\r\n            counter[int(str(post_body[\"port\"])[1])-1].reset()\r\n            self.wfile.write(bytes(\"ok\", \"utf-8\"))\r\n        elif(str(post_body[\"port\"])[0] == \"o\"):\r\n            self.wfile.write(self.setout(post_body))\r\n        elif(str(post_body[\"port\"])[0] == \"m\"):\r\n            self.wfile.write(self.setmotor(post_body))\r\n        elif(str(post_body[\"port\"])[0] == \"s\"):\r\n            self.wfile.write(self.setservo(post_body))\r\n        else:\r\n            self.wfile.write(bytes(\"undefined\", \"utf-8\"))\r\n\r\n    def changein(self, post_body):\r\n        try:\r\n            val = post_body[\"val\"]\r\n            if(val == 0x0a):\r\n                input[int(str(post_body[\"port\"])[1])-1] = txt_factory.input_factory.create_color_sensor(TXT_M, int(str(post_body[\"port\"])[1]))\r\n                inputs[int(str(post_body[\"port\"])[1])-1] = 0x0a\r\n                return bytes(\"ok\", \"utf-8\")\r\n            elif(val == 0x0b):\r\n                input[int(str(post_body[\"port\"])[1])-1] = txt_factory.input_factory.create_photo_resistor(TXT_M, int(str(post_body[\"port\"])[1]))\r\n                inputs[int(str(post_body[\"port\"])[1])-1] = 0x0b\r\n                return bytes(\"ok\", \"utf-8\")\r\n            elif(val == 0x0c):\r\n                input[int(str(post_body[\"port\"])[1])-1] = txt_factory.input_factory.create_ultrasonic_distance_meter(TXT_M, int(str(post_body[\"port\"])[1]))\r\n                inputs[int(str(post_body[\"port\"])[1])-1] = 0x0c\r\n                return bytes(\"ok\", \"utf-8\")\r\n            else:\r\n                return bytes(\"mode not defined\", \"utf-8\")\r\n        except Exception as e:\r\n            return bytes(\"error:\"+str(e), \"utf-8\")\r\n\r\n    def setout(self, post_body):\r\n        try:\r\n            val = int(str(post_body[\"val\"]))\r\n            output[int(str(post_body[\"port\"])[1])-1].set_brightness(val)\r\n            return bytes(\"ok\", \"utf-8\")\r\n        except Exception as e:\r\n            return bytes(\"error:\"+str(e), \"utf-8\")\r\n\r\n    def setmotor(self, post_body):\r\n        #try:\r\n        #    val = int(str(post_body[\"val\"]))\r\n        #    if(val>0):\r\n        #        output[int(str(post_body[\"port\"])[1])].set_brightness(0)\r\n        #        output[int(str(post_body[\"port\"])[1])-1].set_brightness(val)\r\n        #    else:\r\n        #        output[int(str(post_body[\"port\"])[1])].set_brightness(val*(-1))\r\n        #        output[int(str(post_body[\"port\"])[1])-1].set_brightness(0)\r\n        #    return bytes(\"ok\", \"utf-8\")\r\n        #except Exception as e:\r\n        #    return bytes(\"error:\"+str(e), \"utf-8\")\r\n        #\r\n        try:\r\n            val = int(str(post_body[\"val\"]))\r\n            motor_index = int(str(post_body[\"port\"])[1]) - 1\r\n\r\n            motor = motors[motor_index]\r\n\r\n            if val > 0:\r\n                motor.set_speed(val, Motor.CW)\r\n                motor.start()\r\n            elif val < 0:\r\n                motor.set_speed(abs(val), Motor.CCW)\r\n                motor.start()\r\n            else:\r\n                motor.stop()\r\n\r\n            return bytes(\"ok\", \"utf-8\")\r\n        except Exception as e:\r\n            return bytes(\"error:\" + str(e), \"utf-8\")\r\n\r\n    def setservo(self, post_body):\r\n        try:\r\n            val = int(str(post_body[\"val\"]))\r\n            servo[int(str(post_body[\"port\"])[1])-1].set_position(val)\r\n            return bytes(\"ok\", \"utf-8\")\r\n        except Exception as e:\r\n            return bytes(\"error:\"+str(e), \"utf-8\")\r\n\r\nserver = HTTPServer((HOST, PORT ), NewHTTP) ##server is started\r\ntxt_factory.init()\r\ntxt_factory.init_input_factory()\r\ntxt_factory.init_motor_factory()\r\ntxt_factory.init_counter_factory()\r\ntxt_factory.init_usb_factory()\r\ntxt_factory.init_camera_factory()\r\ntxt_factory.init_output_factory()\r\ntxt_factory.init_servomotor_factory()\r\ntxt_factory.init_i2c_factory()\r\n\r\n\r\nTXT_M = txt_factory.controller_factory.create_graphical_controller()\r\nfor x in range (8):\r\n    input.append(txt_factory.input_factory.create_photo_resistor(TXT_M, x+1))\r\nfor x in range (4):\r\n    counter.append(txt_factory.counter_factory.create_mini_switch_counter(TXT_M, x+1))\r\nfor x in range (8):\r\n    output.append(txt_factory.output_factory.create_led(TXT_M, x+1))\r\nfor x in range(3):\r\n    servo.append(txt_factory.servomotor_factory.create_servomotor(TXT_M, x+1))\r\nfor x in range(4):\r\n    motors.append(txt_factory.motor_factory.create_motor(TXT_M, x+1))\r\n\r\ntxt_factory.initialized()\r\nserver.serve_forever() ##runs infinitely\r\n";
+
+/***/ }),
+
+/***/ "../scratch-vm/src/extensions/ft_source/scratchserver_wlan.py?raw":
+/*!************************************************************************!*\
+  !*** ../scratch-vm/src/extensions/ft_source/scratchserver_wlan.py?raw ***!
+  \************************************************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "from fischertechnik.controller.Motor import Motor\r\nimport fischertechnik.factories as txt_factory\r\nimport json\r\nfrom http.server import HTTPServer, BaseHTTPRequestHandler\r\nimport socketserver\r\nHOST = \"192.168.8.2\"  # txt 4.0\r\nPORT = 8000  # Port to listen on (non-privileged ports are > 1023)\r\ninputs = [0x0b, 0x0b, 0x0b, 0x0b,0x0b, 0x0b,0x0b, 0x0b]\r\ninput = []\r\ncounter  = []\r\noutput = []\r\nservo = []\r\nmotors = []\r\nclass NewHTTP(BaseHTTPRequestHandler):\r\n    def do_GET(self):\r\n        self.send_response(200)\r\n        self.send_header(\"Content-type\", \"application/json\")\r\n        self.send_header(\"Access-Control-Allow-Origin\", \"*\"),\r\n        self.end_headers()\r\n        ##TXT_M_I1_color_sensor.get_voltage()\r\n        ##result = { \"i1\":str(TXT_M_I1_mini_switch.get_resistance())}\r\n        result = dict()\r\n        for i in range(8):\r\n            if(inputs[i] == 0x0b):\r\n                result.update({ \"i\"+str(i+1) : str(input[i].get_resistance())})\r\n            elif(inputs[i] == 0x0a):\r\n                result.update({ \"i\"+str(i+1) : str(input[i].get_voltage())})\r\n            elif(inputs[i] == 0x0c):\r\n                result.update({ \"i\"+str(i+1) : str(input[i].get_distance())})\r\n        for n in range(4):\r\n            result.update({ \"c\"+str(n+1) : str(counter[n].get_count())})\r\n        self.wfile.write(bytes(json.dumps(result), \"utf-8\"))\r\n\r\n    def do_OPTIONS(self):\r\n        self.send_response(200)\r\n        self.send_header(\"Access-Control-Allow-Origin\", \"*\"),\r\n        self.send_header(\"Access-Control-Allow-Headers\", \"*\"),\r\n        self.end_headers()\r\n\r\n\r\n    def do_POST(self):\r\n        content_len = int(self.headers.get(\"Content-Length\"))\r\n        post_body = self.rfile.read(content_len)\r\n        self.send_response(200)\r\n        self.send_header(\"Access-Control-Allow-Origin\", \"*\"),\r\n        self.end_headers()\r\n        post_body = json.loads(post_body.decode(\"utf-8\"))\r\n\r\n        if \"cmd\" in post_body:\r\n            if post_body[\"cmd\"] == \"play_sound\":\r\n                \r\n                TXT_M.get_loudspeaker().play(post_body[\"val\"], post_body[\"loop\"])\r\n                self.wfile.write(bytes(\"ok\", \"utf-8\"))\r\n\r\n            elif post_body[\"cmd\"] == \"stop_sound\":\r\n                    \r\n                TXT_M.get_loudspeaker().stop()\r\n                self.wfile.write(bytes(\"ok\", \"utf-8\"))\r\n        \r\n        if(str(post_body[\"port\"])[0] == \"i\"):\r\n            self.wfile.write(self.changein(post_body))\r\n        elif(str(post_body[\"port\"])[0] == \"c\"):\r\n            counter[int(str(post_body[\"port\"])[1])-1].reset()\r\n            self.wfile.write(bytes(\"ok\", \"utf-8\"))\r\n        elif(str(post_body[\"port\"])[0] == \"o\"):\r\n            self.wfile.write(self.setout(post_body))\r\n        elif(str(post_body[\"port\"])[0] == \"m\"):\r\n            self.wfile.write(self.setmotor(post_body))\r\n        elif(str(post_body[\"port\"])[0] == \"s\"):\r\n            self.wfile.write(self.setservo(post_body))\r\n        else:\r\n            self.wfile.write(bytes(\"undefined\", \"utf-8\"))\r\n\r\n    def changein(self, post_body):\r\n        try:\r\n            val = post_body[\"val\"]\r\n            if(val == 0x0a):\r\n                input[int(str(post_body[\"port\"])[1])-1] = txt_factory.input_factory.create_color_sensor(TXT_M, int(str(post_body[\"port\"])[1]))\r\n                inputs[int(str(post_body[\"port\"])[1])-1] = 0x0a\r\n                return bytes(\"ok\", \"utf-8\")\r\n            elif(val == 0x0b):\r\n                input[int(str(post_body[\"port\"])[1])-1] = txt_factory.input_factory.create_photo_resistor(TXT_M, int(str(post_body[\"port\"])[1]))\r\n                inputs[int(str(post_body[\"port\"])[1])-1] = 0x0b\r\n                return bytes(\"ok\", \"utf-8\")\r\n            elif(val == 0x0c):\r\n                input[int(str(post_body[\"port\"])[1])-1] = txt_factory.input_factory.create_ultrasonic_distance_meter(TXT_M, int(str(post_body[\"port\"])[1]))\r\n                inputs[int(str(post_body[\"port\"])[1])-1] = 0x0c\r\n                return bytes(\"ok\", \"utf-8\")\r\n            else:\r\n                return bytes(\"mode not defined\", \"utf-8\")\r\n        except Exception as e:\r\n            return bytes(\"error:\"+str(e), \"utf-8\")\r\n\r\n    def setout(self, post_body):\r\n        try:\r\n            val = int(str(post_body[\"val\"]))\r\n            output[int(str(post_body[\"port\"])[1])-1].set_brightness(val)\r\n            return bytes(\"ok\", \"utf-8\")\r\n        except Exception as e:\r\n            return bytes(\"error:\"+str(e), \"utf-8\")\r\n\r\n    def setmotor(self, post_body):\r\n        #try:\r\n        #    val = int(str(post_body[\"val\"]))\r\n        #    if(val>0):\r\n        #        output[int(str(post_body[\"port\"])[1])].set_brightness(0)\r\n        #        output[int(str(post_body[\"port\"])[1])-1].set_brightness(val)\r\n        #    else:\r\n        #        output[int(str(post_body[\"port\"])[1])].set_brightness(val*(-1))\r\n        #        output[int(str(post_body[\"port\"])[1])-1].set_brightness(0)\r\n        #    return bytes(\"ok\", \"utf-8\")\r\n        #except Exception as e:\r\n        #    return bytes(\"error:\"+str(e), \"utf-8\")\r\n        #\r\n        try:\r\n            val = int(str(post_body[\"val\"]))\r\n            motor_index = int(str(post_body[\"port\"])[1]) - 1\r\n\r\n            motor = motors[motor_index]\r\n\r\n            if val > 0:\r\n                motor.set_speed(val, Motor.CW)\r\n                motor.start()\r\n            elif val < 0:\r\n                motor.set_speed(abs(val), Motor.CCW)\r\n                motor.start()\r\n            else:\r\n                motor.stop()\r\n\r\n            return bytes(\"ok\", \"utf-8\")\r\n        except Exception as e:\r\n            return bytes(\"error:\" + str(e), \"utf-8\")\r\n\r\n    def setservo(self, post_body):\r\n        try:\r\n            val = int(str(post_body[\"val\"]))\r\n            servo[int(str(post_body[\"port\"])[1])-1].set_position(val)\r\n            return bytes(\"ok\", \"utf-8\")\r\n        except Exception as e:\r\n            return bytes(\"error:\"+str(e), \"utf-8\")\r\n\r\nserver = HTTPServer((HOST, PORT ), NewHTTP) ##server is started\r\ntxt_factory.init()\r\ntxt_factory.init_input_factory()\r\ntxt_factory.init_motor_factory()\r\ntxt_factory.init_counter_factory()\r\ntxt_factory.init_usb_factory()\r\ntxt_factory.init_camera_factory()\r\ntxt_factory.init_output_factory()\r\ntxt_factory.init_servomotor_factory()\r\ntxt_factory.init_i2c_factory()\r\n\r\n\r\nTXT_M = txt_factory.controller_factory.create_graphical_controller()\r\nfor x in range (8):\r\n    input.append(txt_factory.input_factory.create_photo_resistor(TXT_M, x+1))\r\nfor x in range (4):\r\n    counter.append(txt_factory.counter_factory.create_mini_switch_counter(TXT_M, x+1))\r\nfor x in range (8):\r\n    output.append(txt_factory.output_factory.create_led(TXT_M, x+1))\r\nfor x in range(3):\r\n    servo.append(txt_factory.servomotor_factory.create_servomotor(TXT_M, x+1))\r\nfor x in range(4):\r\n    motors.append(txt_factory.motor_factory.create_motor(TXT_M, x+1))\r\n\r\ntxt_factory.initialized()\r\nserver.serve_forever() ##runs infinitely\r\n";
 
 /***/ }),
 
