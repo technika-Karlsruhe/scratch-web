@@ -78464,38 +78464,30 @@ __webpack_require__.r(__webpack_exports__);
     id: "gui.extension.ftduino.connectingMessage"
   }),
   helpLink: 'https://technika-karlsruhe.github.io/'
-},
-//{
-//    name: 'RX',
-//    extensionId: 'rx',
-//    collaborator: 'technika',
-//    iconURL: rxIconURL,
-//    insetIconURL: rxInsetIconURL,
-//    description: (
-//        <FormattedMessage
-//            defaultMessage="Connect your projects with RX."
-//            description="Description for the 'fischertechnik' extension"
-//            id="gui.extension.rx.description"
-//        />
-//    ),
-//    featured: true,
-//    disabled: false,
-//    bluetoothRequired: false,
-//    internetConnectionRequired: false,
-//    launchPeripheralConnectionFlow: false,
-//    useAutoScan: false,
-//    connectionIconURL: rxConnectionIconURL,
-//    connectionSmallIconURL: rxConnectionSmallIconURL,
-//    connectingMessage: (
-//        <FormattedMessage
-//            defaultMessage="Connecting"
-//            description="Message to help people connect to their fischertechnik."
-//            id="gui.extension.rx.connectingMessage"
-//        />
-//    ),
-//    helpLink: 'https://technika-karlsruhe.github.io/'
-//},
-{
+}, {
+  name: 'RX',
+  extensionId: 'rx',
+  collaborator: 'technika',
+  iconURL: _ft_rx_big_png__WEBPACK_IMPORTED_MODULE_18__,
+  insetIconURL: _ft_rx_small_png__WEBPACK_IMPORTED_MODULE_19__,
+  description: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__.FormattedMessage, {
+    defaultMessage: "Connect your projects with RX.",
+    id: "gui.extension.rx.description"
+  }),
+  featured: true,
+  disabled: false,
+  bluetoothRequired: false,
+  internetConnectionRequired: false,
+  launchPeripheralConnectionFlow: false,
+  useAutoScan: false,
+  connectionIconURL: _ft_rx_small_png__WEBPACK_IMPORTED_MODULE_19__,
+  connectionSmallIconURL: _ft_rx_small_png__WEBPACK_IMPORTED_MODULE_19__,
+  connectingMessage: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__.FormattedMessage, {
+    defaultMessage: "Connecting",
+    id: "gui.extension.rx.connectingMessage"
+  }),
+  helpLink: 'https://technika-karlsruhe.github.io/'
+}, {
   name: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__.FormattedMessage, {
     defaultMessage: "Music",
     id: "gui.extension.music.name"
@@ -98868,6 +98860,20 @@ class Block {
       }
     };
   }
+  getBlock_setLed() {
+    return {
+      opcode: 'setLed',
+      text: translate._getText('setLed', this.locale),
+      blockType: BlockType.COMMAND,
+      arguments: {
+        STATE: {
+          type: ArgumentType.NUMBER,
+          menu: 'ledState',
+          defaultValue: 0
+        }
+      }
+    };
+  }
   //Block functions
   onOpenClose2(args, controller) {
     if (controller != undefined && controller.connected == true) {
@@ -99372,6 +99378,17 @@ class Block {
       }, 200);
     }
   }
+  setLed(args, controller) {
+    if (controller != undefined && controller.connected == true) {
+      if (args.STATE == '1') {
+        // orange or turn on LED
+        controller.write_Value(34, 1);
+      } else if (args.STATE == '0') {
+        // blue or turn off LED
+        controller.write_Value(34, 0);
+      }
+    }
+  }
 }
 module.exports = Block;
 
@@ -99451,6 +99468,7 @@ var charI = new Array();
 var serviceOut;
 var serviceIn;
 var serviceIMode;
+var serviceLED;
 var funcstate = new Array();
 var changing = new Array();
 var numruns = new Array();
@@ -99458,6 +99476,13 @@ var type;
 var notificationTimer = 0;
 var connect = undefined;
 var bleWriteBusy = false;
+const RX_INPUT_MODE_MAP = {
+  0x0a: 0b000,
+  // mV
+  0x0b: 0b001,
+  // Widerstand
+  0x0c: 0b011 // Ultraschallsensor
+};
 
 //Controller specifications 
 class BTSmart {
@@ -99581,10 +99606,9 @@ class TXT40 {
 }
 class RX {
   constructor(runtime) {
-    _defineProperty(this, "uuidLED", '7b130101-ce8d-45bb-9158-631b769139e9');
-    _defineProperty(this, "uuidsOut", new Array('34845716-f234-41b1-b130-9ba7871abea5', '659de9f7-102f-4cad-8d81-88755c2463ed'));
-    _defineProperty(this, "uuidsIn", new Array('012ec545-4e65-4aa4-8a1f-8c96b1c5dc50', '1ec595f2-a422-4250-87d6-0f680f26037f', '229df363-65dc-4b9e-867a-f434d73c7ff5', '362d2725-67f1-409e-ab41-40d366a63478'));
-    _defineProperty(this, "uuidsIM", new Array('8ae88efe-ad7d-11e6-80f5-76304dec7eb7', '8ae89084-ad7d-11e6-80f5-76304dec7eb7', '8ae89200-ad7d-11e6-80f5-76304dec7eb7', '8ae89386-ad7d-11e6-80f5-76304dec7eb7'));
+    _defineProperty(this, "uuidsOut", new Array('8fa1fb7b-7cf7-4168-aa15-c28452179b3f', '7fe22550-99d9-4a74-9c05-5f7e5a10d6e6', 'aa6f95ee-98a1-4304-a224-df6ed20828c4', '7e5ec20d-7811-444b-b66c-202810180d63', '34845716-f234-41b1-b130-9ba7871abea5', '92ff9d6d-3286-4e78-8d19-da0d2a56e7bc', 'd4c25a50-d9b3-48e2-9829-2d40ed5d4c75', 'a1c0304f-7cb8-4bc2-b649-10c4b4856c7e', '659de9f7-102f-4cad-8d81-88755c2463ed', '86cb606c-eac1-4a7c-8a3a-3907ca868899', '6d6dd638-f972-49bb-9d98-769bbc2798e1', 'f2ad2cfc-a792-427b-ba85-5799a136fa37'));
+    _defineProperty(this, "uuidsIn", new Array('a15bc7b5-98cd-40b4-a6de-e7949e79e300', '951c8dc7-9efd-4e6e-a60e-c9df17b9fc6e', '11ec1253-c4ca-4300-b406-29461af851be', '0b9dfd56-e891-41f3-84a4-0f691ffbd71f', '1725e4f7-c7c4-4936-8a58-d911ab484c11', '1fb4bec7-08cf-4176-9508-2af537f6b228', '15628e48-6cba-4d1c-9c59-50b7fb8a4cac', 'b52a6fa4-f560-4215-a318-8e67586f5681'));
+    _defineProperty(this, "uuidsIM", new Array('e16f15b7-a5bb-4451-aaa8-b9d4a2c38308'));
     _defineProperty(this, "indIn", 8);
     // Number of Inputs
     _defineProperty(this, "indServo", 0);
@@ -99596,13 +99620,12 @@ class RX {
     //name for BLE connection
     _defineProperty(this, "name2", 'RXC');
     _defineProperty(this, "serviceOutuuid", '2052de7a-d5a3-4180-918e-e1110c999756');
-    _defineProperty(this, "serviceOutuuidMobile", '7B130100-CE8D-45BB-9158-631B769139E9');
-    _defineProperty(this, "serviceInuuidMobile", '7B130100-CE8D-45BB-9158-631B769139E9');
-    _defineProperty(this, "serviceLEDuuidMobile", '7B130100-CE8D-45BB-9158-631B769139E9');
-    _defineProperty(this, "serviceInuuid", 'a2fc1a3d-6bfe-460b-9c8c-c433f2aaf1ac');
-    _defineProperty(this, "serviceIModeuuid", '8ae88d6e-ad7d-11e6-80f5-76304dec7eb7');
-    _defineProperty(this, "serviceLEDuuid", '8ae87702-ad7d-11e6-80f5-76304dec7eb7');
-    _defineProperty(this, "services", [this.serviceOutuuid, this.serviceInuuid]);
+    _defineProperty(this, "serviceOutuuidMobile", '2052de7a-d5a3-4180-918e-e1110c999756');
+    _defineProperty(this, "serviceInuuid", 'e5de8301-ca79-4937-b867-21df85062d52');
+    _defineProperty(this, "serviceInuuidMobile", 'e5de8301-ca79-4937-b867-21df85062d52');
+    _defineProperty(this, "serviceIModeuuid", 'e5de8301-ca79-4937-b867-21df85062d52');
+    _defineProperty(this, "serviceIModeuuidMobile", 'e5de8301-ca79-4937-b867-21df85062d52');
+    _defineProperty(this, "services", [this.serviceOutuuid, this.serviceInuuid, this.serviceIModeuuid]);
     /**
      * The runtime instantiating this block package.
      * @type {Runtime}
@@ -99628,18 +99651,60 @@ var input = {
       // Check if trail sensor 2 has been triggered
       let isSensor2Triggered = (controllerValue & 0x20) !== 0;
       valIn[9] = isSensor2Triggered ? 0 : 255;
+    } else if (type.name == 'RXC') {
+      valIn[12] = event.target.value.getUint8(0);
     } else {
-      valIn[6] = event.target.value.getUint8(0); // closed --><255 valIN[2] is correct do not change
+      valIn[6] = event.target.value.getUint8(0); // closed --><255
     }
   },
   in_1: function in_1(event) {
-    valIn[7] = event.target.value.getUint8(0); // valIN[3] is correct do not change
+    if (type.name == 'RXC') {
+      valIn[13] = event.target.value.getUint8(0);
+    } else {
+      valIn[7] = event.target.value.getUint8(0);
+    }
   },
   in_2: function in_2(event) {
-    valIn[8] = event.target.value.getUint8(0); // valIN[4] is correct do not change
+    if (type.name == 'RXC') {
+      valIn[14] = event.target.value.getUint8(0);
+    } else {
+      valIn[8] = event.target.value.getUint8(0);
+    }
   },
   in_3: function in_3(event) {
-    valIn[9] = event.target.value.getUint8(0); // valIN[5] is correct do not change
+    if (type.name == 'RXC') {
+      valIn[15] = event.target.value.getUint8(0);
+    } else {
+      valIn[9] = event.target.value.getUint8(0);
+    }
+  },
+  in_4: function in_4(event) {
+    if (type.name == 'RXC') {
+      valIn[16] = event.target.value.getUint8(0);
+    } else {
+      valIn[10] = event.target.value.getUint8(0);
+    }
+  },
+  in_5: function in_5(event) {
+    if (type.name == 'RXC') {
+      valIn[17] = event.target.value.getUint8(0);
+    } else {
+      valIn[11] = event.target.value.getUint8(0);
+    }
+  },
+  in_6: function in_6(event) {
+    if (type.name == 'RXC') {
+      valIn[18] = event.target.value.getUint8(0);
+    } else {
+      valIn[12] = event.target.value.getUint8(0);
+    }
+  },
+  in_7: function in_7(event) {
+    if (type.name == 'RXC') {
+      valIn[19] = event.target.value.getUint8(0);
+    } else {
+      valIn[13] = event.target.value.getUint8(0);
+    }
   }
 };
 function connectIn() {
@@ -99710,6 +99775,7 @@ function connectServo() {
 }
 function connectOut() {
   //connection of all Outputs
+  let outCount = type.name === 'RXC' ? type.indOut : type.indOut / 3;
   if (ismobile()) {
     setTimeout(() => {
       characteristic = serviceOut.getCharacteristic(type.uuidsOut[f]).then(async characteristic => {
@@ -99719,7 +99785,7 @@ function connectOut() {
       }).then(x => {
         valWrite[f] = 0;
         f = f + 1;
-        if (f < type.indOut / 3) {
+        if (f < outCount) {
           connectOut();
         } else {}
       });
@@ -99731,7 +99797,8 @@ function connectOut() {
     }).then(x => {
       valWrite[f] = 0;
       f = f + 1;
-      if (f < type.indOut / 3) {
+      if (f < outCount) {
+        //console.log("Connecting output " + f + " of " + outCount);
         connectOut();
       } else {}
     });
@@ -99739,8 +99806,35 @@ function connectOut() {
 }
 function connectIMo() {
   // connection of IModes
-  if (ismobile()) {
-    setTimeout(() => {
+  if (type.name === 'RXC') {
+    // RX: all inputs resistance (0b001), Bit 6 "Configure All Inputs"
+    const rxMode = RX_INPUT_MODE_MAP[0x0b]; // 0b001 resistance
+    let setupByte = rxMode << 3 | 0x40; // Type on Bits 3-5, Bit 6 for all Inputs
+    serviceIMode.getCharacteristic(type.uuidsIM[0]).then(characteristic => {
+      return characteristic.writeValue(new Uint8Array([setupByte]));
+    }).then(() => {
+      // For RX there are no further IModes, set g directly to indIn
+      for (let i = 0; i < type.indIn; i++) {
+        valWrite[i + type.indOut] = 0x0b; // 0x0b resistance
+        charWrite[i + type.indOut] = characteristic;
+      }
+      g = type.indIn;
+    });
+  } else {
+    if (ismobile()) {
+      setTimeout(() => {
+        characteristic = serviceIMode.getCharacteristic(type.uuidsIM[g]).then(function connect(characteristic) {
+          charWrite[g + type.indOut] = characteristic;
+          charWrite[g + type.indOut].writeValue(new Uint8Array([0x0b]));
+          valWrite[g + type.indOut] = 0x0b;
+        }).then(function ghoeher() {
+          g = g + 1;
+          if (g < type.indIn) {
+            connectIMo();
+          } else {}
+        });
+      }, 500);
+    } else {
       characteristic = serviceIMode.getCharacteristic(type.uuidsIM[g]).then(function connect(characteristic) {
         charWrite[g + type.indOut] = characteristic;
         charWrite[g + type.indOut].writeValue(new Uint8Array([0x0b]));
@@ -99751,18 +99845,7 @@ function connectIMo() {
           connectIMo();
         } else {}
       });
-    }, 500);
-  } else {
-    characteristic = serviceIMode.getCharacteristic(type.uuidsIM[g]).then(function connect(characteristic) {
-      charWrite[g + type.indOut] = characteristic;
-      charWrite[g + type.indOut].writeValue(new Uint8Array([0x0b]));
-      valWrite[g + type.indOut] = 0x0b;
-    }).then(function ghoeher() {
-      g = g + 1;
-      if (g < type.indIn) {
-        connectIMo();
-      } else {}
-    });
+    }
   }
 }
 function isTablet() {
@@ -99789,7 +99872,8 @@ class BLEDevice {
         stor[i].shift();
       }
     }
-    for (var n = 0; n < type.indOut / 3; n = n + 1) {
+    let outCount = type.name === 'RXC' ? type.indOut : type.indOut / 3;
+    for (var n = 0; n < outCount; n = n + 1) {
       this.write_Value(n, 0);
     }
   }
@@ -99858,7 +99942,7 @@ class BLEDevice {
   }
   write(ind) {
     // actual write method
-    if (!charWrite[ind]) {
+    if (ind !== 34 && !charWrite[ind]) {
       setTimeout(() => this.write(ind), 100);
       return;
     }
@@ -99889,62 +99973,127 @@ class BLEDevice {
         charZust[ind] = 1; // switch to currently changing
         if (ind < type.indOut) {
           //an output value has to be changed  
-          if (valWrite[ind] == stor[ind][0] || valWrite[ind] == 0 || stor[ind][0] == 0) {
-            //if none of these is true, we have to stop the motor first 
-            waitForBleFree().then(() => {
-              return charWrite[ind].writeValue(new Uint8Array([stor[ind][0]]));
-            }).then(x => {
-              bleWriteBusy = false;
-              valWrite[ind] = val; // change memory 
-              charZust[ind] = 0; // switch to no curret task
-              stor[ind].shift(); // delete from storage 
-              if (ismobile()) {
-                return new Promise(resolve => setTimeout(resolve, 100));
-              }
-            }).then(() => {
-              if (stor[ind].length > 0) {
-                // if there are still elements in the storage do it again 
-                this.write(ind);
-              }
-            }).catch(error => {
-              bleWriteBusy = false;
-              console.log(error);
-            });
+          if (type.name === 'RXC') {
+            // --- RX Controller: 2 Byte, -512 to 512 ---
+            let scaled = Math.round(stor[ind][0] * 512 / 127);
+            let value = Math.max(-512, Math.min(512, scaled));
+            let buffer = new ArrayBuffer(2);
+            let view = new DataView(buffer);
+            view.setInt16(0, value, true); // little endian
+            if (valWrite[ind] == stor[ind][0] || valWrite[ind] == 0 || stor[ind][0] == 0) {
+              // no stop needed
+              waitForBleFree().then(() => {
+                return charWrite[ind].writeValue(new Uint8Array(buffer));
+              }).then(x => {
+                bleWriteBusy = false;
+                valWrite[ind] = val;
+                charZust[ind] = 0;
+                stor[ind].shift();
+                if (ismobile()) {
+                  return new Promise(resolve => setTimeout(resolve, 100));
+                }
+              }).then(() => {
+                if (stor[ind].length > 0) {
+                  this.write(ind);
+                }
+              }).catch(error => {
+                bleWriteBusy = false;
+                console.log(error);
+              });
+            } else {
+              // stop needed
+              waitForBleFree().then(() => {
+                // Stop: 2 Byte with 0
+                let stopBuffer = new ArrayBuffer(2);
+                let stopView = new DataView(stopBuffer);
+                stopView.setInt16(0, 0, true);
+                return charWrite[ind].writeValue(new Uint8Array(stopBuffer));
+              }).then(x => {
+                bleWriteBusy = false;
+                if (ismobile()) {
+                  return new Promise(resolve => setTimeout(resolve, 100));
+                }
+              }).then(() => {
+                return waitForBleFree().then(() => charWrite[ind].writeValue(new Uint8Array(buffer)));
+              }).then(x => {
+                bleWriteBusy = false;
+                valWrite[ind] = val;
+                charZust[ind] = 0;
+                stor[ind].shift();
+                if (ismobile()) {
+                  return new Promise(resolve => setTimeout(resolve, 100));
+                }
+              }).then(() => {
+                if (stor[ind].length > 0) {
+                  this.write(ind);
+                }
+              }).catch(error => {
+                bleWriteBusy = false;
+                console.log(error);
+              });
+            }
           } else {
-            waitForBleFree().then(() => {
-              return charWrite[ind].writeValue(new Uint8Array([0]));
-            }).then(x => {
-              bleWriteBusy = false;
-              if (ismobile()) {
-                return new Promise(resolve => setTimeout(resolve, 100));
-              }
-            }).then(() => {
-              return waitForBleFree().then(() => charWrite[ind].writeValue(new Uint8Array([stor[ind][0]])));
-            }).then(x => {
-              bleWriteBusy = false;
-              valWrite[ind] = val; // change memory 
-              charZust[ind] = 0; // switch to no curret task
-              stor[ind].shift(); // delete from storage 
-              if (ismobile()) {
-                return new Promise(resolve => setTimeout(resolve, 100));
-              }
-            }).then(() => {
-              if (stor[ind].length > 0) {
-                // if there are still elements in the storage do it again 
-                this.write(ind);
-              }
-            }).catch(error => {
-              bleWriteBusy = false;
-              console.log(error);
-            });
+            // --- other Controller: 1 Byte ---
+            if (valWrite[ind] == stor[ind][0] || valWrite[ind] == 0 || stor[ind][0] == 0) {
+              // no stop needed
+              waitForBleFree().then(() => {
+                return charWrite[ind].writeValue(new Uint8Array([stor[ind][0]]));
+              }).then(x => {
+                bleWriteBusy = false;
+                valWrite[ind] = val;
+                charZust[ind] = 0;
+                stor[ind].shift();
+                if (ismobile()) {
+                  return new Promise(resolve => setTimeout(resolve, 100));
+                }
+              }).then(() => {
+                if (stor[ind].length > 0) {
+                  this.write(ind);
+                }
+              }).catch(error => {
+                bleWriteBusy = false;
+                console.log(error);
+              });
+            } else {
+              // stop needed
+              waitForBleFree().then(() => {
+                return charWrite[ind].writeValue(new Uint8Array([0]));
+              }).then(x => {
+                bleWriteBusy = false;
+                if (ismobile()) {
+                  return new Promise(resolve => setTimeout(resolve, 100));
+                }
+              }).then(() => {
+                return waitForBleFree().then(() => charWrite[ind].writeValue(new Uint8Array([stor[ind][0]])));
+              }).then(x => {
+                bleWriteBusy = false;
+                valWrite[ind] = val;
+                charZust[ind] = 0;
+                stor[ind].shift();
+                if (ismobile()) {
+                  return new Promise(resolve => setTimeout(resolve, 100));
+                }
+              }).then(() => {
+                if (stor[ind].length > 0) {
+                  this.write(ind);
+                }
+              }).catch(error => {
+                bleWriteBusy = false;
+                console.log(error);
+              });
+            }
           }
-        } else {
-          waitForBleFree().then(() => {
-            return charWrite[ind].writeValue(new Uint8Array([stor[ind][0]]));
-          }).then(x => {
+        } else if (ind >= 34) {
+          // led
+          let getLedCharacteristic = () => serviceLED.getCharacteristic(type.uuidLED);
+          let getLedPromise = ismobile() ? new Promise(resolve => setTimeout(resolve, 100)).then(getLedCharacteristic) : getLedCharacteristic();
+          getLedPromise.then(characteristic => {
+            bleWriteBusy = true;
+            return characteristic.writeValue(new Uint8Array([stor[ind][0]]));
+          }).then(() => {
             bleWriteBusy = false;
-            charZust[ind] = 0;
             valWrite[ind] = val;
+            charZust[ind] = 0;
             stor[ind].shift();
             if (ismobile()) {
               return new Promise(resolve => setTimeout(resolve, 100));
@@ -99955,8 +100104,59 @@ class BLEDevice {
             }
           }).catch(error => {
             bleWriteBusy = false;
-            console.log(error);
+            charZust[ind] = 0;
+            console.log("error:", error);
           });
+        } else {
+          // input mode
+          if (type.name === 'RXC') {
+            //console.log("RXC detected, writing input mode for ind:", ind, "value:", stor[ind][0]);
+            let rxMode = RX_INPUT_MODE_MAP[stor[ind][0]] !== undefined ? RX_INPUT_MODE_MAP[stor[ind][0]] : stor[ind][0];
+            //console.log("RX input mode:", rxMode);
+            let setupByte = ind - 12 & 0x07 | (rxMode & 0x07) << 3; // Port + type
+            //console.log("input: "+ind + " targetMode: " + stor[ind][0] + " input-12: "+(ind-12));
+            // all inputs: setupByte |= 0x80
+            waitForBleFree().then(() => {
+              return serviceIMode.getCharacteristic(type.uuidsIM[0]).then(characteristic => {
+                return characteristic.writeValue(new Uint8Array([setupByte]));
+              });
+            }).then(() => {
+              bleWriteBusy = false;
+              valWrite[ind] = stor[ind][0];
+              charZust[ind] = 0;
+              stor[ind].shift();
+              if (ismobile()) {
+                return new Promise(resolve => setTimeout(resolve, 100));
+              }
+            }).then(() => {
+              if (stor[ind].length > 0) {
+                this.write(ind);
+              }
+            }).catch(error => {
+              bleWriteBusy = false;
+              charZust[ind] = 0;
+              console.log("error:", error);
+            });
+          } else {
+            waitForBleFree().then(() => {
+              return charWrite[ind].writeValue(new Uint8Array([stor[ind][0]]));
+            }).then(x => {
+              bleWriteBusy = false;
+              charZust[ind] = 0;
+              valWrite[ind] = val;
+              stor[ind].shift();
+              if (ismobile()) {
+                return new Promise(resolve => setTimeout(resolve, 100));
+              }
+            }).then(() => {
+              if (stor[ind].length > 0) {
+                this.write(ind);
+              }
+            }).catch(error => {
+              bleWriteBusy = false;
+              console.log(error);
+            });
+          }
         }
       }
     }
@@ -99994,32 +100194,58 @@ class BLEDevice {
     // Called by Hats to handle wrong input modes
     const input = parseInt(args.INPUT);
     const targetMode = args.TARGET_MODE;
-    if (funcstate[input] == 0) {
-      // function is called for the first time
-      funcstate[input] = 1;
-      charI[input].stopNotifications().then(() => {
-        if (valWrite[input] != targetMode) {
-          return charWrite[input].writeValue(new Uint8Array([targetMode]));
-        } else {
-          return Promise.resolve();
-        }
-      }).then(() => {
-        return charI[input].readValue();
-      }).then(() => {
-        return charI[input].startNotifications();
-      }).then(() => {
-        return charI[input].readValue();
-      }).then(() => {
-        valWrite[input] = targetMode;
-        charZust[input] = 0;
-        changing[input] = false;
-        funcstate[input] = 0;
-        numruns[input] = 0;
-      }).catch(err => {
-        console.error("Error while reading value:", err);
-        funcstate[input] = 0;
-        changing[input] = false;
-      });
+    if (type.name === 'RXC') {
+      if (funcstate[input] == 0) {
+        // function is called for the first time
+        funcstate[input] = 1;
+        //console.log("RXC detected, setting up RX input mode for input:", input, "target mode:", targetMode);
+        // RX: only one Byte for all Inputs
+        const rxMode = RX_INPUT_MODE_MAP[targetMode] !== undefined ? RX_INPUT_MODE_MAP[targetMode] : targetMode;
+        //console.log("RX input mode:", rxMode);
+        let setupByte = input - 12 & 0x07 | (rxMode & 0x07) << 3; // Port + type
+        //console.log("input: "+input + " targetMode: " + targetMode + " input-12: "+(input-12));
+        // all inputs: setupByte |= 0x80;
+        serviceIMode.getCharacteristic(type.uuidsIM[0]).then(characteristic => characteristic.writeValue(new Uint8Array([setupByte]))).then(() => {
+          //console.log("RX input mode set successfully for input:", (input-12), "mode:", rxMode);
+          valWrite[input] = targetMode;
+          charZust[input] = 0;
+          changing[input] = false;
+          funcstate[input] = 0;
+          numruns[input] = 0;
+        }).catch(err => {
+          console.error("Error while setting RX input mode:", err);
+          funcstate[input] = 0;
+          changing[input] = false;
+        });
+      }
+    } else {
+      if (funcstate[input] == 0) {
+        // function is called for the first time
+        funcstate[input] = 1;
+        charI[input].stopNotifications().then(() => {
+          if (valWrite[input] != targetMode) {
+            return charWrite[input].writeValue(new Uint8Array([targetMode]));
+          } else {
+            return Promise.resolve();
+          }
+        }).then(() => {
+          return charI[input].readValue();
+        }).then(() => {
+          return charI[input].startNotifications();
+        }).then(() => {
+          return charI[input].readValue();
+        }).then(() => {
+          valWrite[input] = targetMode;
+          charZust[input] = 0;
+          changing[input] = false;
+          funcstate[input] = 0;
+          numruns[input] = 0;
+        }).catch(err => {
+          console.error("Error while reading value:", err);
+          funcstate[input] = 0;
+          changing[input] = false;
+        });
+      }
     }
   }
   write_Value(ind, val) {
@@ -100132,6 +100358,7 @@ class BLEDevice {
           for (i = 0; i < services.length; i = i + 1) {
             console.log(i + services[i].uuid);
             if (services[i].uuid == type.serviceLEDuuid || services[i].uuid == type.serviceLEDuuidMobile) {
+              serviceLED = services[i];
               return services[i].getCharacteristic(type.uuidLED);
             }
           }
@@ -100172,6 +100399,15 @@ class BLEDevice {
         }
         for (var i = 0; i < type.indOut + type.indIn + type.indServo + type.indOut / 3; i = i + 1) {
           // reset all variables we will use
+          charZust[i] = 0;
+          funcstate[i] = 0;
+          changing[i] = false;
+          numruns[i] = 0;
+          stor[i] = [];
+        }
+        //30-35
+        for (var i = 30; i < 36; i = i + 1) {
+          // set all varibles for sound, led etc.
           charZust[i] = 0;
           funcstate[i] = 0;
           changing[i] = false;
@@ -100307,19 +100543,19 @@ class txt40 {
         val: val,
         loop: true
       };
-      console.log(string);
+      //console.log(string);
     } else if (ind === 31) {
       var string = {
         cmd: "play_sound",
         val: val,
         loop: false
       };
-      console.log(string);
+      //console.log(string);
     } else if (ind === 32) {
       var string = {
         cmd: "stop_sound"
       };
-      console.log(string);
+      //console.log(string);
     }
     return JSON.stringify(string);
   }
@@ -100539,6 +100775,7 @@ class HttpDevice {
               });
             }
           } else if (ind < type.indOut + type.indIn) {
+            // input mode change
             data = type.getwriteInMode(ind - type.indOut, stor[pos][0]);
             fetch(url + ':8000', {
               method: 'POST',
@@ -100559,6 +100796,7 @@ class HttpDevice {
               console.log(error);
             });
           } else if (ind < type.indOut + type.indIn + type.indServo) {
+            // servo
             data = type.getwriteServo(ind - type.indOut - type.indIn, stor[pos][0]);
             fetch(url + ':8000', {
               method: 'POST',
@@ -100579,6 +100817,7 @@ class HttpDevice {
               console.log(error);
             });
           } else if (ind >= 30) {
+            // sound
             data = type.getwriteSound(ind, stor[ind][0]);
             fetch(url + ':8000', {
               method: 'POST',
@@ -100598,6 +100837,7 @@ class HttpDevice {
               console.log(error);
             });
           } else {
+            // counter reset
             data = type.getwriteCounterreset(ind - type.indOut - type.indIn - type.indServo);
             fetch(url + ':8000', {
               method: 'POST',
@@ -100650,9 +100890,6 @@ class HttpDevice {
       }
     } else {
       var res = val;
-    }
-    if (!stor[ind]) {
-      stor[ind] = [];
     }
     if (stor[ind].length < 5) {
       //if the que gets to long (values are added faster than deleted, we only safe the last values )
@@ -100773,6 +101010,17 @@ class HttpDevice {
       }).then(x => {
         for (var i = 0; i < type.indOut + type.indIn + type.indServo + type.indOut / 3; i = i + 1) {
           // set all varibles 
+          inputchange[i] = [];
+          inputchange[i][0] = 0;
+          funcstate[i] = 0;
+          changing[i] = false;
+          numruns[i] = 0;
+          valWrite[i] = 0x0b;
+          stor[i] = [];
+        }
+        //30-35
+        for (var i = 30; i < 36; i = i + 1) {
+          // set all varibles for sound, led etc.
           inputchange[i] = [];
           inputchange[i][0] = 0;
           funcstate[i] = 0;
@@ -101113,6 +101361,46 @@ async function stud() {
             } else {
               swal(translate._getText('driver', this.locale));
             }
+          } else if (error == "TypeError: navigator.bluetooth is undefined") {
+            img.setAttribute("src", ftNoWebUSBIcon);
+            if (notis == 2) {
+              const disconnect = new Notification(translate._getText('browsernotwebbt', this.locale), {});
+            } else {
+              swal(translate._getText('browsernotwebbt', this.locale));
+            }
+          } else if (error == "TypeError: navigator.usb is undefined") {
+            img.setAttribute("src", ftNoWebUSBIcon);
+            if (notis == 2) {
+              const disconnect = new Notification(translate._getText('browsernotwebusb', this.locale), {});
+            } else {
+              swal(translate._getText('browsernotwebusb', this.locale));
+            }
+          } else if (error == "TypeError: navigator.serial is undefined") {
+            img.setAttribute("src", ftNoWebUSBIcon);
+            if (notis == 2) {
+              const disconnect = new Notification(translate._getText('browsernotwebserial', this.locale), {});
+            } else {
+              swal(translate._getText('browsernotwebserial', this.locale));
+            }
+          } else if (error == "TypeError: Cannot read properties of undefined (reading 'requestPort')") {
+            img.setAttribute("src", ftNoWebUSBIcon);
+            if (notis == 2) {
+              const disconnect = new Notification(translate._getText('mobilewebserial', this.locale), {});
+            } else {
+              swal(translate._getText('mobilewebserial', this.locale));
+            }
+          } else if (error == "TypeError: Failed to fetch") {
+            if (notis == 2) {
+              const disconnect = new Notification(translate._getText('tryagain', this.locale), {});
+            } else {
+              swal(translate._getText('tryagain', this.locale));
+            }
+          } else if (error == "NetworkError: GATT Server is disconnected. Cannot retrieve services. (Re)connect first with `device.gatt.connect`.") {
+            if (notis == 2) {
+              const disconnect = new Notification(translate._getText('tryagain', this.locale), {});
+            } else {
+              swal(translate._getText('tryagain', this.locale));
+            }
           }
         });
       } else {
@@ -101164,15 +101452,14 @@ class Main {
     } else {
       notis = 1;
     }
-    if (notis == 1) {
-      //check if permission is granted
-      Notification.requestPermission().then(x => {
-        if (Notification.permission == "granted") {
-          notis = 2;
-        }
-      });
+    if (notis == 1) {//check if permission is granted
+      //Notification.requestPermission().then(x=>{
+      //	if(Notification.permission == "granted"){
+      //		notis=2
+      //	}
+      //})	// delete for now
     }
-    this.versionNumber = "0.1.10";
+    this.versionNumber = "0.1.11";
   }
   ismobile() {
     const isTabletDevice = isTablet();
@@ -101428,12 +101715,14 @@ class Main {
   }
   handleFtduinoFlash() {
     console.log("FLASH mode for ftduino started");
+    swal(translate._getText('downloadftduino', this.locale));
     // Flash Code
   }
   async handleDownload(fileData) {
     switch (type) {
       case "ftduino":
         console.log("ftduino download with SB3:", fileData);
+        swal(translate._getText('downloadftduino', this.locale));
         break;
       case "TXT":
         console.log("TXT download with SB3:", fileData);
@@ -101459,12 +101748,15 @@ class Main {
         break;
       case "TX":
         console.log("TX download with SB3:", fileData);
+        swal(translate._getText('downloadtx', this.locale));
         break;
       case "RX":
         console.log("RX download with SB3:", fileData);
+        swal(translate._getText('downloadrx', this.locale));
         break;
       case "TXT40":
         console.log("TXT40 download with SB3:", fileData);
+        swal(translate._getText('downloadtxt40', this.locale));
         break;
       default:
         console.log("Unknown type, no download defined.");
@@ -101899,6 +102191,26 @@ class Menus {
     no.value = 'no';
     return loop;
   }
+  ledState() {
+    const on = {};
+    const off = {};
+    const ledState = [on, off];
+    on.text = translate._getText('on');
+    on.value = '1';
+    off.text = translate._getText('off');
+    off.value = '0';
+    return ledState;
+  }
+  ledStatebt() {
+    const blue = {};
+    const orange = {};
+    const ledState = [blue, orange];
+    blue.text = translate._getText('blue');
+    blue.value = '0';
+    orange.text = translate._getText('orange');
+    orange.value = '1';
+    return ledState;
+  }
 }
 module.exports = Menus;
 
@@ -101918,264 +102230,399 @@ const message = {
   // translations en/ger
   Digitalvoltage: {
     'en': 'digital voltage',
-    'de': 'digitale Spannung'
+    'de': 'digitale Spannung',
+    'fr': 'tension numérique'
   },
   Digitalresistance: {
     'en': 'digital resistance',
-    'de': 'digitaler Widerstand'
+    'de': 'digitaler Widerstand',
+    'fr': 'résistance numérique'
   },
   Analoguevoltage: {
     'en': 'analogue voltage',
-    'de': 'analoge Spannung'
+    'de': 'analoge Spannung',
+    'fr': 'tension analogique'
   },
   Analogueresistance: {
     'en': 'analogue resistance',
-    'de': 'analoger Widerstand'
+    'de': 'analoger Widerstand',
+    'fr': 'résistance analogique'
   },
   Ultrasonic: {
     'en': 'Ultrasonic',
-    'de': 'Ultraschall'
+    'de': 'Ultraschall',
+    'fr': 'ultrason'
   },
   ColorSensor: {
     'en': 'color sensor',
-    'de': 'Farbsensor'
+    'de': 'Farbsensor',
+    'fr': 'capteur de couleur'
   },
   DistanceSensor: {
     'en': 'distance sensor',
-    'de': 'Abstandssensor'
+    'de': 'Abstandssensor',
+    'fr': 'capteur de distance'
   },
   NTCResistor: {
     'en': 'NTC resistor',
-    'de': 'NTC Widerstand'
+    'de': 'NTC Widerstand',
+    'fr': 'résistance NTC'
   },
   PhotoResistor: {
     'en': 'photo resistor',
-    'de': 'Fotowiderstand'
+    'de': 'Fotowiderstand',
+    'fr': 'résistance photo'
   },
   DistanceSensor: {
     'en': 'distance sensor',
-    'de': 'Abstandssensor'
+    'de': 'Abstandssensor',
+    'fr': 'capteur de distance'
   },
   Button: {
     'en': 'button',
-    'de': 'Taster'
+    'de': 'Taster',
+    'fr': 'bouton'
   },
   Lightbarrier: {
     'en': 'lightbarrier',
-    'de': 'Lichtschranke'
+    'de': 'Lichtschranke',
+    'fr': 'barrière lumineuse'
   },
   Reedcontact: {
     'en': 'reedcontact',
-    'de': 'Reedkontakt'
+    'de': 'Reedkontakt',
+    'fr': 'contact reed'
   },
   TrailSensor: {
     'en': 'trail sensor',
-    'de': 'Spursensor'
+    'de': 'Spursensor',
+    'fr': 'capteur de piste'
   },
   Open: {
     'en': 'opens',
-    'de': 'öffnet'
+    'de': 'öffnet',
+    'fr': 'ouvre'
   },
   Closed: {
     'en': 'closes',
-    'de': 'schließt'
+    'de': 'schließt',
+    'fr': 'ferme'
   },
   Forward: {
     'en': 'forward',
-    'de': 'Vorwärts'
+    'de': 'Vorwärts',
+    'fr': 'avant'
   },
   Backwards: {
     'en': 'backwards',
-    'de': 'Rückwärts'
+    'de': 'Rückwärts',
+    'fr': 'arrière'
   },
   yes: {
     'en': 'yes',
-    'de': 'ja'
+    'de': 'ja',
+    'fr': 'oui'
   },
   no: {
     'en': 'no',
-    'de': 'nein'
+    'de': 'nein',
+    'fr': 'non'
+  },
+  on: {
+    'en': 'on',
+    'de': 'an',
+    'fr': 'sur'
+  },
+  off: {
+    'en': 'off',
+    'de': 'aus',
+    'fr': 'désactivé'
+  },
+  blue: {
+    'en': 'blue',
+    'de': 'blau',
+    'fr': 'bleu'
+  },
+  orange: {
+    'en': 'orange',
+    'de': 'orange',
+    'fr': 'orange'
   },
   onOpenClose: {
     'en': 'If [SENSOR] [INPUT] [OPENCLOSE]',
-    'de': 'Wenn [SENSOR] [INPUT] [OPENCLOSE]'
+    'de': 'Wenn [SENSOR] [INPUT] [OPENCLOSE]',
+    'fr': 'Si [SENSOR] [INPUT] [OPENCLOSE]'
   },
   onInput: {
     'en': 'If value of [SENSOR] [INPUT] [OPERATOR] [VALUE]',
-    'de': 'Wenn der Wert [SENSOR] [INPUT] [OPERATOR] [VALUE]'
+    'de': 'Wenn der Wert [SENSOR] [INPUT] [OPERATOR] [VALUE]',
+    'fr': 'Si la valeur de [SENSOR] [INPUT] [OPERATOR] [VALUE]'
   },
   getSensor: {
     'en': 'Read value of [SENSOR] [INPUT]',
-    'de': 'Lese Wert von [SENSOR] [INPUT]'
+    'de': 'Lese Wert von [SENSOR] [INPUT]',
+    'fr': 'Lire la valeur de [SENSOR] [INPUT]'
   },
   isClosed: {
     'en': 'Is [SENSOR] [INPUT] closed?',
-    'de': 'Ist [SENSOR] [INPUT] geschlossen?'
+    'de': 'Ist [SENSOR] [INPUT] geschlossen?',
+    'fr': 'Est-ce que [SENSOR] [INPUT] est fermé ?'
   },
   doSetLamp: {
     'en': 'Set lamp [OUTPUT] to [NUM]',
-    'de': 'Setze Lampe [OUTPUT] auf [NUM]'
+    'de': 'Setze Lampe [OUTPUT] auf [NUM]',
+    'fr': 'Mettre la lampe [OUTPUT] à [NUM]'
   },
   doSetOutput: {
     'en': 'Set output [OUTPUT] to [NUM]',
-    'de': 'Setze Ausgang [OUTPUT] auf [NUM]'
+    'de': 'Setze Ausgang [OUTPUT] auf [NUM]',
+    'fr': 'Mettre la sortie [OUTPUT] à [NUM]'
   },
   doConfigureInput: {
     'en': 'Set input [INPUT] to [MODE]',
-    'de': 'Setze Eingang [INPUT] auf [MODE]'
+    'de': 'Setze Eingang [INPUT] auf [MODE]',
+    'fr': 'Configurer l’entrée [INPUT] en [MODE]'
   },
   doSetMotorSpeed: {
     'en': 'Set motor [MOTOR_ID] to [SPEED]',
-    'de': 'Setze Motor [MOTOR_ID] auf [SPEED]'
+    'de': 'Setze Motor [MOTOR_ID] auf [SPEED]',
+    'fr': 'Mettre le moteur [MOTOR_ID] à [SPEED]'
   },
   doSetMotorSpeedDir: {
     'en': 'Set motor [MOTOR_ID] to [SPEED] [DIRECTION]',
-    'de': 'Setze Motor [MOTOR_ID] auf [SPEED] [DIRECTION]'
+    'de': 'Setze Motor [MOTOR_ID] auf [SPEED] [DIRECTION]',
+    'fr': 'Mettre le moteur [MOTOR_ID] à [SPEED] [DIRECTION]'
   },
   doSetMotorDir: {
     'en': 'Set motor [MOTOR_ID] to [DIRECTION]',
-    'de': 'Setze Motor [MOTOR_ID] auf [DIRECTION]'
+    'de': 'Setze Motor [MOTOR_ID] auf [DIRECTION]',
+    'fr': 'Mettre le moteur [MOTOR_ID] à [DIRECTION]'
   },
   doStopMotor: {
     'en': 'Stop motor [MOTOR_ID]',
-    'de': 'Stoppe Motor [MOTOR_ID]'
+    'de': 'Stoppe Motor [MOTOR_ID]',
+    'fr': 'Arrêter le moteur [MOTOR_ID]'
   },
   doSetServoPosition: {
     'en': 'Set servo [SERVO_ID] to [POSITION]',
-    'de': 'Setze Servo [SERVO_ID] auf [POSITION]'
+    'de': 'Setze Servo [SERVO_ID] auf [POSITION]',
+    'fr': 'Mettre le servo [SERVO_ID] à [POSITION]'
   },
   onCounter: {
     'en': 'If counter [COUNTER_ID] [OPERATOR] [VALUE]',
-    'de': 'Wenn Zähler [COUNTER_ID] [OPERATOR] [VALUE]'
+    'de': 'Wenn Zähler [COUNTER_ID] [OPERATOR] [VALUE]',
+    'fr': 'Si le compteur [COUNTER_ID] [OPERATOR] [VALUE]'
   },
   getCounter: {
     'en': 'Get value of counter [COUNTER_ID]',
-    'de': 'Lese Wert von Zähler [COUNTER_ID]'
+    'de': 'Lese Wert von Zähler [COUNTER_ID]',
+    'fr': 'Lire la valeur du compteur [COUNTER_ID]'
   },
   isCounter: {
     'en': 'Is counter [COUNTER_ID] [OPERATOR] [VALUE]',
-    'de': 'Ist Zähler [COUNTER_ID] [OPERATOR] [VALUE]'
+    'de': 'Ist Zähler [COUNTER_ID] [OPERATOR] [VALUE]',
+    'fr': 'Le compteur [COUNTER_ID] est-il [OPERATOR] [VALUE] ?'
   },
   doPlaySound: {
     'en': 'Play sound [NUM]',
-    'de': 'Spiele Sound [NUM]'
+    'de': 'Spiele Sound [NUM]',
+    'fr': 'Jouer le son [NUM]'
   },
   doPlaySoundWait: {
     'en': 'Play sound [NUM] and wait',
-    'de': 'Spiele Sound [NUM] und warte'
+    'de': 'Spiele Sound [NUM] und warte',
+    'fr': 'Jouer le son [NUM] et attendre'
   },
   doPlaySound2: {
     'en': 'Play sound [SOUND_ID] Loop [LOOP]',
-    'de': 'Spiele Sound [SOUND_ID] Wiederholen [LOOP]'
+    'de': 'Spiele Sound [SOUND_ID] Wiederholen [LOOP]',
+    'fr': 'Jouer le son [SOUND_ID] en boucle [LOOP]'
   },
   doStopSound: {
     'en': 'Stop sound',
-    'de': 'Stoppe Sound'
+    'de': 'Stoppe Sound',
+    'fr': 'Arrêter le son'
   },
   doResetCounter: {
     'en': 'Reset counter [COUNTER_ID]',
-    'de': 'Setze Zähler [COUNTER_ID] zurück'
+    'de': 'Setze Zähler [COUNTER_ID] zurück',
+    'fr': 'Réinitialiser le compteur [COUNTER_ID]'
   },
   doSetMotorSpeedDirDist: {
     'en': 'Move motor [MOTOR_ID] by [STEPS] steps with [SPEED] [DIRECTION]',
-    'de': 'Bewege Motor [MOTOR_ID] um [STEPS] Schritte mit [SPEED] [DIRECTION]'
+    'de': 'Bewege Motor [MOTOR_ID] um [STEPS] Schritte mit [SPEED] [DIRECTION]',
+    'fr': 'Déplacer le moteur [MOTOR_ID] de [STEPS] pas avec [SPEED] [DIRECTION]'
   },
   doSetMotorSpeedDirSync: {
     'en': 'Move motor [MOTOR_ID] [DIRECTION] and [MOTOR_ID2] [DIRECTION2] with [SPEED]',
-    'de': 'Bewege Motor [MOTOR_ID] [DIRECTION] und [MOTOR_ID2] [DIRECTION2] mit [SPEED]'
+    'de': 'Bewege Motor [MOTOR_ID] [DIRECTION] und [MOTOR_ID2] [DIRECTION2] mit [SPEED]',
+    'fr': 'Déplacer le moteur [MOTOR_ID] [DIRECTION] et [MOTOR_ID2] [DIRECTION2] avec [SPEED]'
   },
   doSetMotorSpeedDirDistSync: {
     'en': 'Move motor [MOTOR_ID] [DIRECTION] and [MOTOR_ID2] [DIRECTION2] by [STEPS] steps with [SPEED]',
-    'de': 'Bewege Motor [MOTOR_ID] [DIRECTION] und [MOTOR_ID2] [DIRECTION2] um [STEPS] Schritte mit [SPEED]'
+    'de': 'Bewege Motor [MOTOR_ID] [DIRECTION] und [MOTOR_ID2] [DIRECTION2] um [STEPS] Schritte mit [SPEED]',
+    'fr': 'Déplacer le moteur [MOTOR_ID] [DIRECTION] et [MOTOR_ID2] [DIRECTION2] de [STEPS] pas avec [SPEED]'
   },
   doStopMotorAndReset: {
     'en': 'Reset [MOTOR_ID]',
-    'de': 'Setze [MOTOR_ID] zurück'
+    'de': 'Setze [MOTOR_ID] zurück',
+    'fr': 'Réinitialiser [MOTOR_ID]'
+  },
+  setLed: {
+    'en': 'Set LED [STATE]',
+    'de': 'Setze LED [STATE]',
+    'fr': 'Mettre la LED [STATE]'
   },
   //alerts and notifications
   connect: {
     'en': 'Do you want to connect via USB or BT?',
-    'de': 'Willst du dich über USB oder BT verbinden?'
+    'de': 'Willst du dich über USB oder BT verbinden?',
+    'fr': 'Voulez-vous vous connecter via USB ou BT ?'
   },
   connectwlan: {
     'en': 'Do you want to connect via USB or WLAN?',
-    'de': 'Willst du dich über USB oder WLAN verbinden?'
+    'de': 'Willst du dich über USB oder WLAN verbinden?',
+    'fr': 'Voulez-vous vous connecter via USB ou WLAN ?'
   },
   cancel: {
     'en': 'Cancel',
-    'de': 'Abbrechen'
+    'de': 'Abbrechen',
+    'fr': 'Annuler'
   },
   connected: {
     'en': 'The controller is connected',
-    'de': 'Der Controller ist verbunden'
+    'de': 'Der Controller ist verbunden',
+    'fr': 'Le contrôleur est connecté'
   },
   start: {
     'en': 'You can start now',
-    'de': 'Du kannst nun starten'
+    'de': 'Du kannst nun starten',
+    'fr': 'Vous pouvez commencer maintenant'
   },
   disconnected: {
     'en': 'The controller is disconnected',
-    'de': 'Der Controller ist getrennt'
+    'de': 'Der Controller ist getrennt',
+    'fr': 'Le contrôleur est déconnecté'
   },
   reconnect: {
     'en': 'try reconnecting by clicking the connect button in the right upper corner',
-    'de': 'Versuche, die Verbindung erneut herzustellen, indem du auf die Schaltfläche „Verbinden“ in der rechten oberen Ecke klickst'
+    'de': 'Versuche, die Verbindung erneut herzustellen, indem du auf die Schaltfläche „Verbinden“ in der rechten oberen Ecke klickst',
+    'fr': 'Essayez de vous reconnecter en cliquant sur le bouton de connexion dans le coin supérieur droit'
   },
   range: {
     'en': 'Output values range from 0 to 8',
-    'de': 'Ausgangswerte reichen von 0 bis 8'
+    'de': 'Ausgangswerte reichen von 0 bis 8',
+    'fr': 'Les valeurs de sortie vont de 0 à 8'
   },
   maximum: {
     'en': 'keep in mind that the maximum output value is 8',
-    'de': 'denke daran, dass der maximale Ausgangswert 8 ist'
+    'de': 'denke daran, dass der maximale Ausgangswert 8 ist',
+    'fr': 'gardez à l’esprit que la valeur de sortie maximale est de 8'
   },
   driver: {
     'en': 'The driver is not installed',
-    'de': 'Der Treiber ist nicht installiert'
+    'de': 'Der Treiber ist nicht installiert',
+    'fr': 'Le pilote n’est pas installé'
   },
   install: {
     'en': 'Please install the driver first',
-    'de': 'Bitte installiere zuerst den Treiber'
+    'de': 'Bitte installiere zuerst den Treiber',
+    'fr': 'Veuillez d’abord installer le pilote'
   },
   connectbutton: {
     'en': 'Connect',
-    'de': 'Verbinden'
+    'de': 'Verbinden',
+    'fr': 'Connecter'
   },
   downloadbutton: {
     'en': 'Download',
-    'de': 'Herunterladen'
+    'de': 'Herunterladen',
+    'fr': 'Télécharger'
   },
   usbnotsupport: {
     'en': 'The Device is not supported via USB, because it does not have a USB port.',
-    'de': 'Das Gerät wird nicht per USB unterstützt, da dieses keinen USB Anschluss hat.'
+    'de': 'Das Gerät wird nicht per USB unterstützt, da dieses keinen USB Anschluss hat.',
+    'fr': 'L’appareil n’est pas pris en charge via USB car il n’a pas de port USB.'
   },
   btnotsupport: {
     'en': 'The Device is not supported via Bluetooth, because it does not have a Bluetooth module.',
-    'de': 'Das Gerät wird nicht per Bluetooth unterstützt, da dieses kein Bluetooth Modul hat.'
+    'de': 'Das Gerät wird nicht per Bluetooth unterstützt, da dieses kein Bluetooth Modul hat.',
+    'fr': 'L’appareil n’est pas pris en charge via Bluetooth car il n’a pas de module Bluetooth.'
   },
   apikeytxt: {
     'en': 'Enter the API key here:',
-    'de': 'Gebe hier den API-Schlüssel ein:'
+    'de': 'Gebe hier den API-Schlüssel ein:',
+    'fr': 'Entrez la clé API ici :'
   },
   apikey: {
     'en': 'API key',
-    'de': 'API-Schlüssel'
+    'de': 'API-Schlüssel',
+    'fr': 'Clé API'
   },
   ftduinoflash: {
     'en': 'Uploading webusb scatch or File',
-    'de': 'Lade WebUSB Scratch oder Datei hoch'
+    'de': 'Lade WebUSB Scratch oder Datei hoch',
+    'fr': 'Téléchargement de WebUSB Scratch ou du fichier'
   },
   ftduinoupload: {
     'en': 'Upload file',
-    'de': 'Datei hochladen'
+    'de': 'Datei hochladen',
+    'fr': 'Télécharger le fichier'
   },
   notsupported: {
     'en': 'The device is currently not supported!\n Please use download button.\n Download the Scratch file before.',
-    'de': 'Das Gerät wird zurzeit nicht unterstützt!\n Bitte benutze den Download-Button.\n Lade davor die Scratch Datei herunter.'
+    'de': 'Das Gerät wird zurzeit nicht unterstützt!\n Bitte benutze den Download-Button.\n Lade davor die Scratch Datei herunter.',
+    'fr': 'L’appareil n’est actuellement pas pris en charge !\n Veuillez utiliser le bouton de téléchargement.\n Téléchargez d’abord le fichier Scratch.'
   },
   downloadtxt: {
     'en': 'Now upload the converted file to the TXT via http://192.168.7.2/#txt/Scratch (TXT connected via USB).\n If the page doesnt load, activate the WEB server and the VNC server on the TXT.\n',
-    'de': 'Lade jetzt die convert Datei auf den TXT via http://192.168.7.2/#txt/Scratch (TXT über USB verbunden).\n Falls die Seite nicht läd -> aktiverie auf dem TXT den WEB Server und den VNC Server.\n'
+    'de': 'Lade jetzt die convert Datei auf den TXT via http://192.168.7.2/#txt/Scratch (TXT über USB verbunden).\n Falls die Seite nicht läd -> aktiverie auf dem TXT den WEB Server und den VNC Server.\n',
+    'fr': 'Maintenant, téléchargez le fichier converti sur le TXT via http://192.168.7.2/#txt/Scratch (TXT connecté via USB).\n Si la page ne se charge pas, activez le serveur WEB et le serveur VNC sur le TXT.\n'
+  },
+  downloadftduino: {
+    'en': 'Currently not supported.',
+    'de': 'Derzeit nicht unterstützt.',
+    'fr': 'Actuellement non pris en charge.'
+  },
+  downloadtx: {
+    'en': 'Currently not supported.',
+    'de': 'Derzeit nicht unterstützt.',
+    'fr': 'Actuellement non pris en charge.'
+  },
+  downloadrx: {
+    'en': 'Currently not supported.',
+    'de': 'Derzeit nicht unterstützt.',
+    'fr': 'Actuellement non pris en charge.'
+  },
+  downloadtxt40: {
+    'en': 'Currently not supported.',
+    'de': 'Derzeit nicht unterstützt.',
+    'fr': 'Actuellement non pris en charge.'
+  },
+  browsernotwebbt: {
+    'en': 'Your browser does not support Web Bluetooth.\nPlease use a different browser like Chrome or Edge.',
+    'de': 'Dein Browser unterstützt kein Web Bluetooth.\nBitte benutze einen anderen Browser wie Chrome oder Edge.',
+    'fr': 'Votre navigateur ne prend pas en charge Web Bluetooth.\nVeuillez utiliser un autre navigateur comme Chrome ou Edge.'
+  },
+  browsernotwebusb: {
+    'en': 'Your browser does not support Web USB.\nPlease use a different browser like Chrome or Edge.',
+    'de': 'Dein Browser unterstützt kein Web USB.\nBitte benutze einen anderen Browser wie Chrome oder Edge.',
+    'fr': 'Votre navigateur ne prend pas en charge Web USB.\nVeuillez utiliser un autre navigateur comme Chrome ou Edge.'
+  },
+  browsernotwebserial: {
+    'en': 'Your browser does not support Web Serial.\nPlease use a different browser like Chrome or Edge.',
+    'de': 'Dein Browser unterstützt kein Web Serial.\nBitte benutze einen anderen Browser wie Chrome oder Edge.',
+    'fr': 'Votre navigateur ne prend pas en charge Web Serial.\nVeuillez utiliser un autre navigateur comme Chrome ou Edge.'
+  },
+  mobilewebserial: {
+    'en': 'Web Serial is not supported on mobile devices.\nPlease use a desktop browser.',
+    'de': 'Web Serial wird auf mobilen Geräten nicht unterstützt.\nBitte benutze einen Desktop-Browser.',
+    'fr': 'Web Serial n’est pas pris en charge sur les appareils mobiles.\nVeuillez utiliser un navigateur de bureau.'
+  },
+  tryagain: {
+    'en': 'The Controller is not yet properly connected.\nPlease try again.',
+    'de': 'Der Controller ist noch nicht richtig verbunden.\nBitte versuche es erneut.',
+    'fr': 'Le contrôleur n’est pas encore correctement connecté.\nVeuillez réessayer.'
   }
 };
 class Translation {
@@ -102237,6 +102684,9 @@ var type; // defined locally-> only accessible from this file--> no interference
 var connect = undefined;
 var autoconnect = undefined;
 let writer = undefined;
+var data = undefined;
+let rxBuffer = new Uint8Array(0);
+var listentimeout = 5; // time between two listen calls
 
 //Controller specifications 
 class BTSmart {
@@ -102299,61 +102749,138 @@ class BTSmart {
 class RX {
   constructor(runtime) {
     _defineProperty(this, "request", 3);
-    // important?
-    _defineProperty(this, "baudRate", 9600);
-    _defineProperty(this, "value", 3000000 / 115200);
-    // important?
+    _defineProperty(this, "baudRate", 19200);
     _defineProperty(this, "configuration", 1);
-    _defineProperty(this, "interface", 1);
+    _defineProperty(this, "interface", 0);
     _defineProperty(this, "usbVendorId", 0x221D);
     _defineProperty(this, "usbProductId", 0x0029);
-    _defineProperty(this, "writeOut", new Uint8Array([0x5a, 0xa5, 0x68, 0xce, 0x2a, 0x04, 0, 4, 0, 3, 0, 0]));
-    _defineProperty(this, "writeInMode", new Uint8Array([0x5a, 0xa5, 0x14, 0x34, 0xff, 0x93, 0x00, 0x02, 0, 0]));
-    _defineProperty(this, "writeLED", new Uint8Array([0x5a, 0xa5, 0xf4, 0x8a, 0x16, 0x32, 0x00, 0x00]));
-    _defineProperty(this, "read", new Uint8Array([0x5a, 0xa5, 0xf4, 0x8a, 0x16, 0x32, 0x00, 0x00]));
     _defineProperty(this, "inputOffset", 2);
     //amout of values ignored when reading
-    _defineProperty(this, "inputHeader", new Array(90, 165, 244, 138, 22, 50, 0, 20));
+    _defineProperty(this, "inputHeader", [0x10, 0x02]);
     _defineProperty(this, "indIn", 8);
     // Number of Inputs
     _defineProperty(this, "inLength", 24);
     _defineProperty(this, "indServo", 0);
     _defineProperty(this, "indOut", 12);
     // Number of outputs
-    _defineProperty(this, "indSum", 20);
+    _defineProperty(this, "indSum", 10);
     // Sum of all characteristics which are permanently accessed (not LED)
     _defineProperty(this, "name", 'RXC');
+    //name for USB connection
+    _defineProperty(this, "hasResponse", true);
+    _defineProperty(this, "writeOut", new Uint8Array([0x55, 0xAA, 0x04, 0x02, 0x00, 0x00, 0x00]));
+    _defineProperty(this, "writeInMode", new Uint8Array([0x55, 0xAA, 0x04, 0x03, 0x00, 0x00, 0x00]));
+    _defineProperty(this, "writeLED", new Uint8Array([0x55, 0xAA, 0x02, 0x04, 0x00]));
+    _defineProperty(this, "read", new Uint8Array([0x55, 0xAA, 0x02, 0x01, 0x00]));
     /**
      * The runtime instantiating this block package.
      * @type {Runtime}
      */
     this.runtime = runtime;
     translate.setup(); // setup translation
+    listentimeout = 250; // RX has a longer response time
   }
-  //functions returning the commands in the controller appropriate format
+  // Output
   getwriteOut(ind, val) {
-    // val <0 right, >0 left
-    if (ind < 2) {
-      data = this.writeOut;
-      data[8] = ind;
-      data[11] = val;
-      return data;
+    //console.log(`Writing to output ${ind} with value ${val}`);
+    let data;
+    if (ind >= 0 && ind <= 3) {
+      //console.log(`Setting motor ${ind + 1} speed to ${val}`);
+      // Motor: Setup Motor 0xC2
+      // val: -127 to 127, must be represented on 2 Byte (signed, two's complement)
+      let speed = Math.max(-127, Math.min(127, val));
+      let speed16 = speed << 2; // Scale value to 10 Bit (-512 to 512)
+      // 2-Byte signed (little endian)
+      data = new Uint8Array(8);
+      data[0] = 0x10; // DLE
+      data[1] = 0x02; // STX
+      data[2] = 0xC2; // CMD (Setup Motor)
+      data[3] = ind + 1; // Motor Number (1-4)
+      data[4] = speed16 >> 8 & 0xFF; // MSB
+      data[5] = speed16 & 0xFF; // LSB
+      data[6] = 0x10; // DLE
+      data[7] = 0x03; // ETX
+    } else if (ind >= 4 && ind <= 11) {
+      //console.log(`Setting output ${ind - 3} PWM to ${val}`);
+      // Output: Setup Output 0xC0
+      // val: 0 to 127, scale to 0-512
+      let pwm = Math.max(0, Math.min(127, val));
+      let pwm16 = pwm << 2; // scale to 10 Bit (0-512)
+      data = new Uint8Array(8);
+      data[0] = 0x10; // DLE
+      data[1] = 0x02; // STX
+      data[2] = 0xC0; // CMD (Setup Output)
+      data[3] = ind - 3; // Port Number (1-8)
+      data[4] = pwm16 >> 8 & 0xFF; // MSB
+      data[5] = pwm16 & 0xFF; // LSB
+      data[6] = 0x10; // DLE
+      data[7] = 0x03; // ETX
+    } else {
+      throw new Error("Index outside the valid range (0-11)");
     }
-  }
-  getwriteInMode(ind, val) {
-    data = this.writeInMode;
-    data[8] = ind;
-    data[9] = val;
+    //console.log('Output command prepared:', data);
     return data;
   }
-  getread() {
-    return this.read;
-  }
-  getwriteLED() {
-    return this.writeLED;
+
+  // Input Mode
+  getwriteInMode(ind, val) {
+    let typeVal;
+    switch (val) {
+      case 0x0a:
+        // mV
+        typeVal = 0;
+        break;
+      case 0x0b:
+        // resistor
+        typeVal = 1;
+        break;
+      case 0x0c:
+        // ultrasonic
+        typeVal = 3;
+        break;
+      case 0xFF:
+        // disabled
+        typeVal = 0xFF;
+        break;
+      default:
+        typeVal = 0xFF;
+      // fallback: disabled
+    }
+    //console.log(`Setting input mode for input ${ind} to ${val} (mapped to type ${typeVal})`);
+    let data = new Uint8Array(7);
+    data[0] = 0x10; // DLE
+    data[1] = 0x02; // STX
+    data[2] = 0xB0; // CMD
+    data[3] = ind === 255 ? 255 : ind + 1;
+    ; // Port
+    data[4] = typeVal; // Type
+    data[5] = 0x10; // DLE
+    data[6] = 0x03; // ETX
+    //console.log('Input mode command prepared:', data);
+    return data;
   }
 
-  //name for USB connection
+  // LED
+  getwriteLED() {
+    //placeholder for LED writing
+    let data = new Uint8Array(5);
+    data[0] = 0x55;
+    data[1] = 0xAA;
+    data[2] = 0x02;
+    data[3] = 0x04;
+    return data;
+  }
+
+  // read
+  getread() {
+    let data = new Uint8Array(5);
+    data[0] = 0x10; // DLE
+    data[1] = 0x02; // STX
+    data[2] = 0xB2; // CMD
+    data[3] = 0x10; // DLE
+    data[4] = 0x03; // ETX
+    return data;
+  }
 }
 class TX {
   constructor(runtime) {
@@ -102423,25 +102950,104 @@ async function listen() {
       reader = connecteddevice.readable.getReader();
       return reader.read(); // read some of the incoming values 
     }).then(ans => {
+      //console.log('Response received:', ans);
       reader.releaseLock();
       n = 0;
-      while (n < ans.value.byteLength - 1 - type.inLength) {
-        // go through the array
-        if (ans.value[n + type.inputOffset] == type.inputHeader[0] && ans.value[n + type.inputOffset + 1] == type.inputHeader[1] && ans.value[n + 2 + type.inputOffset] == type.inputHeader[2] && ans.value[n + 3 + type.inputOffset] == type.inputHeader[3] && ans.value[n + 4 + type.inputOffset] == type.inputHeader[4] && ans.value[n + 5 + type.inputOffset] == type.inputHeader[5] && ans.value[n + 6 + type.inputOffset] == type.inputHeader[6] && ans.value[n + 7 + type.inputOffset] == type.inputHeader[7]) {
-          //check if the right header can be found
-          for (var i = 0; i < type.indIn; i = i + 1) {
-            // read at the right positions 
-            valIn[i + type.indOut] = ans.value[n + 13 + 4 * i];
-            if (ans.value[n + 11 + i * 4] == 10) {
-              valWrite[i + type.indOut] = 0x0a;
-            } else {
-              valWrite[i + type.indOut] = 0x0b;
+
+      // Buffer for RXC data extension (for fragmented packets)
+      let newData = new Uint8Array(ans.value);
+      let combined = new Uint8Array(rxBuffer.length + newData.length);
+      combined.set(rxBuffer, 0);
+      combined.set(newData, rxBuffer.length);
+      rxBuffer = combined;
+      if (type.name === 'RXC') {
+        //console.log(`RXC-Buffer before processing: ${rxBuffer}`);
+        // RXC specific logic
+        let start = -1;
+        let end = -1;
+        // Search for header
+        for (let i = 0; i < rxBuffer.length - 2; i++) {
+          if (rxBuffer[i] === 0x10 && rxBuffer[i + 1] === 0x02 && rxBuffer[i + 2] === 0xB2) {
+            start = i;
+            break;
+          }
+        }
+        // Search for end bytes from start
+        if (start !== -1) {
+          for (let j = start + 3; j < rxBuffer.length - 1; j++) {
+            if (rxBuffer[j] === 0x10 && rxBuffer[j + 1] === 0x03) {
+              end = j + 2; // End index is after ETX
+              break;
             }
           }
+        }
+        if (start !== -1 && end !== -1 && end <= rxBuffer.length) {
+          // Complete packet found
+          let packet = rxBuffer.slice(start, end);
+          // Clean up buffer (everything after the packet remains for later)
+          rxBuffer = rxBuffer.slice(end);
+          let offset = 3; // After header, data starts
+          for (let i = 0; i < type.indIn; i++) {
+            //let err = packet[offset + i * 2];
+            //let val = packet[offset + i * 2 + 1];
+            let currentInputStartIndex = offset + i * 3;
+            let err = packet[currentInputStartIndex];
+            let val; // Declare val here
+
+            // Error handling (this part is largely correct, just the indexing for val changes)
+            if (err === 0) {
+              // Get the mode from valWrite to determine how to interpret the value
+              let mode = valWrite[i + type.indOut];
+              switch (mode) {
+                case 0x0a: // mV (0-65535)
+                case 0x0c:
+                  // Ultraschall (0-65535)
+                  // Combine two bytes for 16-bit value
+                  val = packet[currentInputStartIndex + 1] << 8 | packet[currentInputStartIndex + 2];
+                  break;
+                case 0x0b:
+                  // Ohm (0-65535)
+                  // Same 16-bit logic, then convert
+                  val = packet[currentInputStartIndex + 1] << 8 | packet[currentInputStartIndex + 2];
+                  val = val > 0 ? 255 : 0; // Your specific conversion for Ohm
+                  break;
+                case 0x0d:
+                  // Digital (0/1)
+                  // Digital is likely a single byte value
+                  val = packet[currentInputStartIndex + 1]; // Assuming digital is 1 byte after error
+                  break;
+                default:
+                  val = 0; // Default to 0 if mode is unknown
+                  break;
+              }
+              valIn[i + type.indOut] = val; // Assign the parsed value
+            } else {
+              valIn[i + type.indOut] = 0; // Error, set to 0
+            }
+          }
+          //console.log(`RXC-Buffer after processing: ${rxBuffer}`);
           success = true;
-          break;
         } else {
-          n = n + 1;
+          //console.log('RXC-Header or ETX not found or packet incomplete!');
+          // Still no complete packet, waiting for more data
+          //console.log('Current RXC buffer:', rxBuffer);
+        }
+      } else {
+        while (n < ans.value.byteLength - 1 - type.inLength) {
+          if (ans.value[n + type.inputOffset] == type.inputHeader[0] && ans.value[n + type.inputOffset + 1] == type.inputHeader[1] && ans.value[n + 2 + type.inputOffset] == type.inputHeader[2] && ans.value[n + 3 + type.inputOffset] == type.inputHeader[3] && ans.value[n + 4 + type.inputOffset] == type.inputHeader[4] && ans.value[n + 5 + type.inputOffset] == type.inputHeader[5] && ans.value[n + 6 + type.inputOffset] == type.inputHeader[6] && ans.value[n + 7 + type.inputOffset] == type.inputHeader[7]) {
+            for (var i = 0; i < type.indIn; i = i + 1) {
+              valIn[i + type.indOut] = ans.value[n + 13 + 4 * i];
+              if (ans.value[n + 11 + i * 4] == 10) {
+                valWrite[i + type.indOut] = 0x0a;
+              } else {
+                valWrite[i + type.indOut] = 0x0b;
+              }
+            }
+            success = true;
+            break;
+          } else {
+            n = n + 1;
+          }
         }
       }
       if (read == 1 && success == true) {
@@ -102460,12 +103066,69 @@ async function listen() {
     setTimeout(() => {
       // call again after short delay
       listen();
-    }, 5);
+    }, listentimeout);
   } else {
     setTimeout(() => {
       // if we were unable to read, try again 
       listen();
     }, 0);
+  }
+}
+
+/**
+ * Reads until one of the expected byte patterns appears
+ * or the time runs out.
+ *
+ * @param {number[][]} patterns  List of valid byte arrays, e.g. [[0x02,0xC0],[0x02,0xC2]]
+ * @param {number}     timeoutMs Timeout in milliseconds
+ * @returns {Promise<{pattern: Uint8Array, data: Uint8Array}|null>}
+ */
+async function waitForResponse(patterns, timeoutMs) {
+  const reader = connecteddevice.readable.getReader();
+  const start = Date.now();
+  const buffer = []; // All received bytes
+
+  try {
+    while (Date.now() - start < timeoutMs) {
+      const remaining = timeoutMs - (Date.now() - start);
+      const result = await Promise.race([reader.read(), new Promise(resolve => setTimeout(() => resolve({
+        timeout: true
+      }), remaining))]);
+      if (result.timeout) {
+        console.warn('Timeout: no data received');
+        break;
+      }
+      const {
+        value,
+        done
+      } = result;
+
+      //const { value, done } = await reader.read();
+      if (done) break; // Stream ended
+      if (value) buffer.push(...value); // Received data written to buffer
+
+      // Check each allowed sequence
+      for (const pat of patterns) {
+        const patLen = pat.length;
+        outer: for (let i = 0; i <= buffer.length - patLen; i++) {
+          for (let j = 0; j < patLen; j++) {
+            if (buffer[i + j] !== pat[j]) continue outer;
+          }
+          //console.log('Pattern found:', pat.map(b=>b.toString(16)));
+          return {
+            pattern: new Uint8Array(pat),
+            data: new Uint8Array(buffer)
+          };
+        }
+      }
+    }
+    console.warn('Timeout: no valid pattern received');
+    return null;
+  } catch (err) {
+    console.error('Error reading:', err);
+    return null;
+  } finally {
+    reader.releaseLock();
   }
 }
 class USBDevice {
@@ -102476,7 +103139,8 @@ class USBDevice {
         stor[i].shift();
       }
     }
-    for (var n = 0; n < type.indOut / 3; n = n + 1) {
+    let outCount = type.name === 'RXC' ? type.indOut : type.indOut / 3;
+    for (var n = 0; n < outCount; n = n + 1) {
       this.write_Value(n, 0);
     }
   }
@@ -102583,7 +103247,7 @@ class USBDevice {
       }
     }
   }
-  write() {
+  async write() {
     // actual write method
     var ind = list[0];
     var pos = ind;
@@ -102604,17 +103268,69 @@ class USBDevice {
               // do we need to set it to 0 first to avoid sudden changes?
               data = type.getwriteOut(ind, 0); // returns the data in the right format for the specified controller 
               writer = connecteddevice.writable.getWriter();
-              writer.write(data).then(x => {
+              await writer.write(data).then(async x => {
                 writer.releaseLock();
-                return 5;
-              }).then(x => {
-                //Writing different motor outputs might also work with one command which simultaneously chnages output values 
+                //console.log("Await write 0");
+                if (type.hasResponse) {
+                  const legitPatterns = [[0x02, 0xC0],
+                  // first allowed header
+                  [0x02, 0xC2] // second allowed header
+                  ];
+                  //console.log('Awaiting response after write 0');
+                  const result = await waitForResponse(legitPatterns, 5000); // Timeout e.g. 5 seconds
+                  if (result) {
+                    //console.log('Response received:', result.data);
+                  } else {
+                    //console.log('Response not received or timeout');
+                  }
+                  //let reader = connecteddevice.readable.getReader();
+                  //let ans = await reader.read();
+                  //reader.releaseLock();
+                  //console.log('Response after write 0:', ans);
+
+                  //reader = connecteddevice.readable.getReader();
+                  //let ans2 = await reader.read();
+                  //reader.releaseLock();
+                  //console.log('Response after write 0 (second read):', ans2);
+
+                  return result.data;
+                } else {
+                  return Promise.resolve();
+                } // before was here 5
+              }).then(async x => {
+                //Writing different motor outputs might also work with one command which simultaneously changes output values
                 data = type.getwriteOut(ind, stor[ind][0]);
                 writer = connecteddevice.writable.getWriter();
-                return writer.write(data);
-              }).then(x => {
+                await writer.write(data);
+              }).then(async x => {
                 writer.releaseLock();
-                return 5;
+                //console.log("Awaiting write target");
+                if (type.hasResponse) {
+                  const legitPatterns = [[0x02, 0xC0],
+                  // first allowed header
+                  [0x02, 0xC2] // second allowed header
+                  ];
+                  //console.log('Awaiting response after write target');
+                  const result = await waitForResponse(legitPatterns, 5000); // Timeout e.g. 5 seconds
+                  if (result) {
+                    //console.log('Response received:', result.data);
+                  } else {
+                    //console.log('Response not received or timeout');
+                  }
+                  //let reader = connecteddevice.readable.getReader();
+                  //let ans = await reader.read();
+                  //reader.releaseLock();
+                  //console.log('Response after write target:', ans);
+
+                  //reader = connecteddevice.readable.getReader();
+                  //let ans2 = await reader.read();
+                  //reader.releaseLock();
+                  //console.log('Response after write target (second read):', ans2);
+
+                  return result.data;
+                } else {
+                  return Promise.resolve();
+                } // before was here 5
               }).then(x => {
                 charZust = 0;
                 valWrite[ind] = val;
@@ -102628,9 +103344,27 @@ class USBDevice {
             } else {
               data = type.getwriteOut(ind, stor[ind][0]);
               writer = connecteddevice.writable.getWriter();
-              writer.write(data).then(x => {
+              await writer.write(data).then(x => {
                 writer.releaseLock();
+                //console.log("Awaiting write target");
                 return 5;
+              }).then(async x => {
+                if (type.hasResponse) {
+                  const legitPatterns = [[0x02, 0xC0],
+                  // first allowed header
+                  [0x02, 0xC2] // second allowed header
+                  ];
+                  //console.log('Awaiting response after write target 2');
+                  const result = await waitForResponse(legitPatterns, 5000); // Timeout e.g. 5 seconds
+                  if (result) {
+                    //console.log('Response received:', result.data);
+                  } else {
+                    //console.log('Response not received or timeout');
+                  }
+                  return result.data;
+                } else {
+                  return Promise.resolve();
+                }
               }).then(x => {
                 valWrite[ind] = val;
                 charZust = 0;
@@ -102643,12 +103377,31 @@ class USBDevice {
               });
             }
           } else if (ind < type.indOut + type.indIn) {
+            // input mode
+            //console.log('Writing input mode for input ' + (ind - type.indOut) + ' with value ' + stor[pos][0]);
             data = type.getwriteInMode(pos - type.indOut, stor[pos][0]);
             writer = connecteddevice.writable.getWriter();
-            writer.write(data).then(x => {
+            await writer.write(data).then(x => {
               writer.releaseLock();
               return 5;
-            }).then(x => {
+            }).then(async x => {
+              if (type.hasResponse) {
+                const legitPatterns = [[0x02, 0xB0],
+                // first allowed header
+                [0x02, 0xB1] // second allowed header
+                ];
+                //console.log('Awaiting response after write input mode');
+                const result = await waitForResponse(legitPatterns, 5000); // Timeout e.g. 5 seconds
+                if (result) {
+                  //console.log('Response received:', result.data);
+                } else {
+                  //console.log('Response not received or timeout');
+                }
+                return result.data;
+              } else {
+                return Promise.resolve();
+              }
+            }).then(result => {
               charZust = 0;
               valWrite[pos] = val;
               list.shift();
@@ -102658,9 +103411,23 @@ class USBDevice {
               console.log(error);
               this.write();
             });
-          } else if (ind < type.indOut + type.indIn + type.indServo) {
+          } else if (ind < type.indOut + type.indIn + type.indServo) {// servo
             //servomotors can be written here 
-          } else {
+          } else if (ind === 34) {
+            // led
+            data = type.getwriteLED();
+            writer = connecteddevice.writable.getWriter();
+            writer.write(data).then(x => {
+              writer.releaseLock();
+              charZust = 0;
+              stor[ind].shift();
+              list.shift();
+              this.write();
+            }).catch(error => {
+              console.log(error);
+              this.write();
+            });
+          } else {// counter reset
             //implement counterreset here 
           }
         } else {
@@ -102730,6 +103497,7 @@ class USBDevice {
         }]
       }).then(port => {
         connecteddevice = port;
+        console.log('Connecting');
         return port.open({
           baudRate: type.baudRate
         });
@@ -102750,11 +103518,34 @@ class USBDevice {
           numruns[i] = 0;
           stor[i] = [];
         }
-        listen(); // setup the two selfcalling functions 
-        this.write();
-        this.connected = true;
-        buttonpressed = false;
-        resolve(connecteddevice);
+        //30-35
+        for (var i = 30; i < 36; i = i + 1) {
+          // set all varibles for sound, led etc.
+          inputchange[i] = [];
+          funcstate[i] = 0;
+          changing[i] = false;
+          numruns[i] = 0;
+          stor[i] = [];
+        }
+        console.log('Connected to device type: ' + type.name);
+
+        //if (this.controllertype === 'RX') { too early
+        //    for (let i = 1; i <= type.indIn; i++) {
+        //        const data = type.getwriteInMode(i, 1);
+        //        writer = connecteddevice.writable.getWriter();
+        //        writer.write(data);
+        //        writer.releaseLock();
+        //        valWrite[(i - 1) + type.indOut] = 0x0b;
+        //    }
+        //}
+      }).then(() => {
+        setTimeout(() => {
+          listen(); // setup the two selfcalling functions
+          this.write();
+          this.connected = true;
+          buttonpressed = false;
+          resolve(connecteddevice);
+        }, 2000);
       }).catch(error => {
         reject(error);
       });
@@ -102792,6 +103583,15 @@ class USBDevice {
         read = 0;
         for (var i = 0; i < type.indOut + type.indIn + type.indServo + type.indOut / 3; i = i + 1) {
           // set all varibles 
+          inputchange[i] = [];
+          funcstate[i] = 0;
+          changing[i] = false;
+          numruns[i] = 0;
+          stor[i] = [];
+        }
+        //30-35
+        for (var i = 30; i < 36; i = i + 1) {
+          // set all varibles for sound, led etc.
           inputchange[i] = [];
           funcstate[i] = 0;
           changing[i] = false;
@@ -103308,8 +104108,15 @@ class ftduino {
     }));
     return data;
   }
-  getwriteLED() {
-    return this.writeLED;
+  getwriteLED(val) {
+    textEncoder = new TextEncoder();
+    let data = this.textEncoder.encode(JSON.stringify({
+      set: {
+        port: "led",
+        value: val
+      }
+    }));
+    return data;
   }
 }
 class TX {
@@ -103369,48 +104176,81 @@ class RX {
     _defineProperty(this, "configuration", 1);
     _defineProperty(this, "interface", 1);
     _defineProperty(this, "vendorId", 0x221D);
-    _defineProperty(this, "PromiseroductId", 0x0029);
-    _defineProperty(this, "indIn", 8);
-    // Number of Inputs
-    _defineProperty(this, "inLength", 24);
-    _defineProperty(this, "indServo", 0);
+    _defineProperty(this, "productId", 0x0029);
+    _defineProperty(this, "name", 'ROBO RX Controller');
     _defineProperty(this, "writeresponse", 0);
-    // some controllers might return data which we have to read to clear input buffer 
-    _defineProperty(this, "indOut", 12);
-    // Number of outputs
-    _defineProperty(this, "indSum", 10);
-    /**
-     * The runtime instantiating this block package.
-     * @type {Runtime}
-     */
+    _defineProperty(this, "indIn", 8);
+    _defineProperty(this, "inLength", 17);
+    _defineProperty(this, "indServo", 0);
+    _defineProperty(this, "indOut", 8);
+    _defineProperty(this, "indSum", 16);
+    _defineProperty(this, "outEndpoint", 2);
+    _defineProperty(this, "inEndpoint", 2);
     this.runtime = runtime;
-    translate.setup(); // setup translation
+    translate.setup();
   }
-  // Sum of all characteristics which are permanently accessed (not LED)
-
-  async readInput(indee) {
-    this.getread(true);
-  }
-  readfunc() {}
   getwriteOut(ind, val) {
-    if (ind < 2) {
-      data = this.writeOut;
-      data[8] = ind;
-      data[11] = val;
-      return data;
+    //console.log(`getwriteOut called with ind=${ind}, val=${val}`);
+    if (typeof valWrite[0] === "undefined") {
+      for (let i = 0; i < 8; i++) valWrite[i] = 0;
     }
+    let pwm = Math.round(val / 100 * 7);
+    pwm = Math.max(0, Math.min(7, pwm));
+    valWrite[ind] = pwm;
+
+    // Paket: [0xF4, O1, O2, O3, O4, O5, O6, O7, O8]
+    const data = [0xF4];
+    for (let i = 0; i < 8; i++) {
+      data.push(valWrite[i] || 0);
+    }
+    return new Uint8Array(data);
   }
+  async readInput() {
+    //try {
+    //    const result = await connecteddevice.transferIn(this.inEndpoint, 17);
+    //    if (result.status === "ok" && result.data && result.data.byteLength >= 17) {
+    //        const data = new Uint8Array(result.data.buffer);
+    //        // data[0] == 0xF3
+    //        for (let i = 0; i < 8; i++) {
+    //            // 16 Bit Wert, Little Endian
+    //            valIn[i + this.indOut] = data[1 + i * 2] | (data[2 + i * 2] << 8);
+    //        }
+    //    }
+    //    console.log("RX readInput success:", valIn.slice(this.indOut, this.indOut + 8));
+    //} catch (e) {
+    //    console.error("RX readInput error:", e);
+    //}
+  }
+  readfunc() {
+    this.readInput().then(() => {
+      charZust = 0;
+    });
+  }
+
+  /**
+   * Input modes
+   *   0x00 = Digital
+   *   0x01 = Analog
+   *   0x02 = Resistance
+   *   0x03 = Counter
+   */
   getwriteInMode(ind, val) {
-    data = this.writeInMode;
-    data[8] = ind;
-    data[9] = val;
-    return data;
+    //console.log(`getwriteInMode called with ind=${ind}, val=${val}`);
+    return new Uint8Array([0xF6, ind & 0x07, val & 0xFF, 0, 0, 0]);
   }
-  getread() {
-    return this.read;
+
+  /**
+   * Dummy
+   */
+  getwriteCounterreset(ind) {
+    return new Uint8Array([0xF7, ind & 0x07, 0, 0, 0, 0]);
   }
-  getwriteLED() {
-    return this.writeLED;
+
+  /**
+   * Dummy
+   */
+  getwriteLED(val) {
+    return new Uint8Array([0]);
   }
 }
 async function listen() {
@@ -103638,6 +104478,7 @@ class WebUSBDevice {
               });
             }
           } else if (ind < type.indOut + type.indIn) {
+            // input mode
             data = type.getwriteInMode(ind - type.indOut, stor[pos][0]);
             connecteddevice.transferOut(outEndpoint, data).then(x => {
               if (type.writeresponse == 0) {
@@ -103658,9 +104499,23 @@ class WebUSBDevice {
               this.write();
               console.log(error);
             });
-          } else if (ind < type.indOut + type.indIn + type.indServo) {
+          } else if (ind < type.indOut + type.indIn + type.indServo) {// servo
             //servomotors can be written here 
+          } else if (ind === 34) {
+            // led
+            data = type.getwriteLED(val);
+            connecteddevice.transferOut(outEndpoint, data).then(() => {
+              charZust = 0;
+              valWrite[ind] = val;
+              stor[ind].shift();
+              list.shift();
+              this.write();
+            }).catch(error => {
+              console.log(error);
+              this.write();
+            });
           } else {
+            // counter reset
             data = type.getwriteCounterreset(ind - type.indOut - type.indIn);
             connecteddevice.transferOut(outEndpoint, data).then(x => {
               if (type.writeresponse == 0) {
@@ -103815,6 +104670,17 @@ class WebUSBDevice {
             valWrite[7] = 0x0b;
             valWrite[8] = 0x0b;
           }
+        }
+        //30-35
+        for (var i = 30; i < 36; i = i + 1) {
+          // set all varibles for sound, led etc.
+          inputchange[i] = [];
+          inputchange[i][0] = 0;
+          funcstate[i] = 0;
+          changing[i] = false;
+          numruns[i] = 0;
+          stor[i] = [];
+          valWrite[i] = 0;
         }
         if (this.controllertype == 'ftduino') {
           let data = undefined;
@@ -103991,6 +104857,17 @@ class WebUSBDevice {
           numruns[i] = 0;
           valWrite[i] = 0x0b;
           stor[i] = [];
+        }
+        //30-35
+        for (var i = 30; i < 36; i = i + 1) {
+          // set all varibles for sound, led etc.
+          inputchange[i] = [];
+          inputchange[i][0] = 0;
+          funcstate[i] = 0;
+          changing[i] = false;
+          numruns[i] = 0;
+          stor[i] = [];
+          valWrite[i] = 0x0b;
         }
         if (this.controllertype == 'ftduino') {
           let data = undefined;
@@ -106153,7 +107030,7 @@ class Scratch3BTReceiverBlocks {
       docsURI: 'https://technika-karlsruhe.github.io/',
       blocks: [
       //the blocks are already defined in the block.js file and accessed like that:
-      b.getBlock_dosetLamp(), b.getBlock_doSetOutput(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor(), b.getBlock_doSetServoPosition()],
+      b.getBlock_dosetLamp(), b.getBlock_doSetOutput(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor(), b.getBlock_doSetServoPosition(), b.getBlock_setLed()],
       menus: {
         // defining the different Menus, identified by the blocks through their name
         motorID: {
@@ -106164,6 +107041,9 @@ class Scratch3BTReceiverBlocks {
         },
         motorDirection: {
           items: m.motorDirection()
+        },
+        ledState: {
+          items: m.ledStatebt()
         }
       }
     };
@@ -106190,6 +107070,9 @@ class Scratch3BTReceiverBlocks {
   }
   doSetServoPosition(args) {
     b.doSetServoPosition(args, controller);
+  }
+  setLed(args) {
+    b.setLed(args, controller);
   }
   reset() {
     // reset function triggered by pressing the red stop button
@@ -106289,7 +107172,7 @@ class Scratch3BtsmartBlocks {
       docsURI: 'https://technika-karlsruhe.github.io/',
       blocks: [
       //the blocks are already defined in the block.js file and accessed like that:
-      b.getBlock_onOpenClose(), b.getBlock_onInput(), b.getBlock_getSensor(), b.getBlock_isClosed(), b.getBlock_dosetLamp(), b.getBlock_doSetOutput(), b.getBlock_doConfigureInput(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor()],
+      b.getBlock_onOpenClose(), b.getBlock_onInput(), b.getBlock_getSensor(), b.getBlock_isClosed(), b.getBlock_dosetLamp(), b.getBlock_doSetOutput(), b.getBlock_doConfigureInput(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor(), b.getBlock_setLed()],
       menus: {
         // defining the different Menus, identified by the blocks through their name
         motorID: {
@@ -106315,6 +107198,9 @@ class Scratch3BtsmartBlocks {
         },
         compares: {
           items: m.compares()
+        },
+        ledState: {
+          items: m.ledStatebt()
         }
       }
     };
@@ -106354,6 +107240,9 @@ class Scratch3BtsmartBlocks {
   }
   doStopMotor(args) {
     b.doStopMotor(args, controller);
+  }
+  setLed(args) {
+    b.setLed(args, controller);
   }
   reset() {
     // reset function triggered by pressing the red stop button
@@ -107686,10 +108575,10 @@ class Scratch3ftduinoBlocks {
       //the blocks are already defined in the block.js file and accessed like that:
       b.getBlock_onOpenClose(), b.getBlock_onCounter(), b.getBlock_onInput2(), b.getBlock_getCounter(), b.getBlock_isCounter(), b.getBlock_getSensor2(), b.getBlock_isClosed(), b.getBlock_doSetLamp2(), b.getBlock_doSetOutput2(), b.getBlock_doResetCounter(), b.getBlock_doConfigureInput2(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doStopMotor(),
       //b.getBlock_doSetMotorSpeedDirDist(),
-      b.getBlock_doSetMotorSpeedDirSync()
+      b.getBlock_doSetMotorSpeedDirSync(),
       //b.getBlock_doSetMotorSpeedDirDistSync(),
       //b.getBlock_doStopMotorAndReset(),
-      ],
+      b.getBlock_setLed()],
       menus: {
         // defining the different Menus, identified by the blocks through their name
         counterID: {
@@ -107721,6 +108610,9 @@ class Scratch3ftduinoBlocks {
         },
         compares: {
           items: m.compares()
+        },
+        ledState: {
+          items: m.ledState()
         }
       }
     };
@@ -107798,6 +108690,9 @@ class Scratch3ftduinoBlocks {
   	b.doStopMotorAndReset(args, controller)
   }*/
 
+  setLed(args) {
+    b.setLed(args, controller);
+  }
   reset() {
     // reset function triggered by pressing the red stop button
     if (controller != undefined) {
@@ -113177,20 +114072,23 @@ class Scratch3RXBlocks {
       docsURI: 'https://technika-karlsruhe.github.io/',
       blocks: [
       //the blocks are already defined in the block.js file and accessed like that:
-      b.getBlock_onOpenClose(), b.getBlock_onInput(), b.getBlock_getSensor(), b.getBlock_isClosed(), b.getBlock_dosetLamp(), b.getBlock_doSetOutput(), b.getBlock_doConfigureInput(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor()],
+      b.getBlock_onOpenClose(), b.getBlock_onInput2(), b.getBlock_getSensor2(), b.getBlock_isClosed(), b.getBlock_doSetLamp2(), b.getBlock_doSetOutput2(), b.getBlock_doConfigureInput2(), b.getBlock_doSetMotorSpeed(), b.getBlock_doSetMotorSpeedDir(), b.getBlock_doSetMotorDir(), b.getBlock_doStopMotor()],
       menus: {
         // defining the different Menus, identified by the blocks through their name
         motorID: {
           items: main._formatMenuM(outInt)
         },
+        outputID: {
+          items: main._formatMenuOut(outInt)
+        },
         inputID: {
           items: main._formatMenuin(inInt, outInt)
         },
-        inputModes: {
-          items: m.inputModes()
+        inputModes2: {
+          items: m.inputModes2()
         },
-        inputAnalogSensorTypes: {
-          items: m.inputAnalogSensorTypes()
+        inputAnalogSensorTypes2: {
+          items: m.inputAnalogSensorTypes2()
         },
         inputDigitalSensorTypes: {
           items: m.inputDigitalSensorTypes()
@@ -113211,24 +114109,24 @@ class Scratch3RXBlocks {
   onOpenClose(args) {
     return b.onOpenClose(args, controller);
   }
-  onInput(args) {
+  onInput2(args) {
     // SENSOR, INPUT, OPERATOR, VALUE
     return b.onInput(args, controller);
   }
-  getSensor(args) {
+  getSensor2(args) {
     return b.getSensor(args, controller);
   }
   isClosed(args) {
     // SENSOR, INPUT
     return b.isClosed(args, controller);
   }
-  doSetLamp(args) {
+  doSetLamp2(args) {
     b.doSetLamp(args, controller);
   }
-  doSetOutput(args) {
+  doSetOutput2(args) {
     b.doSetOutput(args, controller);
   }
-  doConfigureInput(args) {
+  doConfigureInput2(args) {
     b.doConfigureInput(args, controller);
   }
   doSetMotorSpeed(args) {
