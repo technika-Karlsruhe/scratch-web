@@ -12,12 +12,15 @@ https://technika-karlsruhe.github.io/scratch-web/
 - TXT4.0
 - ftduino
 - LT
-- weiter folgen u.a. (RX, TX, TXT)
+- RX
+- weiter folgen u.a. (TX, TXT)
 
 ### Offline (Programm kann auf Controller geladen werden):
 - nicht möglich (Bt-Smart, Bt-Receiver, Robby, LT)
 - TXT
 - weiter folgen u.a. (TXT4.0, TX, ftduino, RX)
+
+## TensorFlow und Teachable Machine Extension
 
 ## Unterstützte Brwoser:
 - Android: Chrome
