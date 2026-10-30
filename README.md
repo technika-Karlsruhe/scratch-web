@@ -13,10 +13,11 @@ https://technika-karlsruhe.github.io/scratch-web/
 - ftduino
 - LT
 - RX
+- I/O-Extension
 - weiter folgen u.a. (TX, TXT)
 
 ### Offline (Programm kann auf Controller geladen werden):
-- nicht möglich (Bt-Smart, Bt-Receiver, Robby, LT)
+- nicht möglich (Bt-Smart, Bt-Receiver, Robby, LT, I/O-Extension)
 - TXT
 - weiter folgen u.a. (TXT4.0, TX, ftduino, RX)
 
